@@ -31,10 +31,10 @@ const p3 = new Promise((resolve, reject) => {
 // getData();
 
 async function getData1() {
-  const val = await p1;
+  const val = await p2;
   console.log("hello1");
   console.log(val);
-  const val2 = await p2;
+  const val2 = await p1;
   console.log("hello 2");
   console.log(val2);
 }
