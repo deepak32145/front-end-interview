@@ -13,13 +13,13 @@ const fnArrow = () => {
   //this will throw error
 };
 
-let userName = "deepak global";
+var userName = "deepak global";
 
 let user = {
   userName: "deepak choudhary",
   rc1: () => {
+    var userName = "dc";
     console.log(this.userName);
-    //refers to global scope
   },
   rc2() {
     console.log(this.userName);

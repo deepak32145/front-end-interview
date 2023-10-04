@@ -22,13 +22,11 @@ const p3 = new Promise((resolve, reject) => {
   }, 15000);
 });
 
-// function getData() {
-//   p.then((res) => {
-//     console.log(res);
-//   });
-//   console.log("Hello");
-// }
-// getData();
+async function getData() {
+  const result = await p;
+  console.log(result);
+}
+getData();
 
 async function getData1() {
   const val = await p2;

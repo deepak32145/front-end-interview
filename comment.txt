@@ -2,3 +2,21 @@
 
 null vs undefined 
 
+what is event delegation  ul li 
+
+flatten the array question 
+
+var let const questions
+
+setTimeOut questions
+
+call , apply , bind 
+
+composition question 
+
+promise questions
+
+ways to center a div 
+
+debouncer 
+
