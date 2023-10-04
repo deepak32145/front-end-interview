@@ -22,7 +22,6 @@ function customFlat(arr, depth = 1) {
   });
   return result;
 }
-
 console.log(customFlat(arr, (depth = 3)));
 
 console.log(arr.flat(3));

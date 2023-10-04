@@ -7,7 +7,7 @@ var arr = [5, 6];
 
 multiply(...arr); //spread operator
 
-// const fn = (a , ...nums , x , y) =>{
-//     console.log(x , y); rest operator has to be last parameter in code
-// }
-// fn(4 , 5 , 6, 7);
+const fn = (a , ...nums , x , y) =>{
+    console.log(x , y);
+}
+fn(4 , 5 , 6, 7);
