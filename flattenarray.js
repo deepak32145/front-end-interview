@@ -25,3 +25,5 @@ function customFlat(arr, depth = 1) {
 console.log(customFlat(arr, (depth = 3)));
 
 console.log(arr.flat(3));
+
+//00 00 20 17 66
