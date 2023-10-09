@@ -22,13 +22,13 @@ Promise.all([
   console.log(val);
 });
 
-Promise.all([
-  showText("hello", 6000),
-  showName("hi", 10000),
-  Promise.reject("ok"),
-]).then((val) => {
-  console.log(val);
-});
+// Promise.all([
+//   showText("hello", 6000),
+//   showName("hi", 10000),
+//   Promise.reject("ok"),
+// ]).then((val) => {
+//   console.log(val);
+// });
 
 function resolvePromises(promises) {
   let result = [];

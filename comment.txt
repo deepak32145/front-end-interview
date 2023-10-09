@@ -20,3 +20,6 @@ ways to center a div
 
 debouncer 
 
+
+alphaNumeric
+numeric
