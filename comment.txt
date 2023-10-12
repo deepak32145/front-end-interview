@@ -23,3 +23,21 @@ debouncer
 
 alphaNumeric
 numeric
+
+what is full form of RXJS , 
+
+what is purpose of RXJS
+
+what are observables and observers
+
+
+150,000
+
+
+
+
+
+
+
+
+

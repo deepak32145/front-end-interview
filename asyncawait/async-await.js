@@ -1,6 +1,6 @@
 const p = new Promise((resolve, reject) => {
   setTimeout(() => {
-    resolve("promise is resolved");
+    resolve("promise is resolved sdafasdfasd fsdaf ");
   }, 5000);
 });
 
@@ -28,12 +28,14 @@ async function getData() {
 }
 getData();
 
-async function getData1() {
-  const val = await p2;
-  console.log("hello1");
-  console.log(val);
-  const val2 = await p1;
-  console.log("hello 2");
-  console.log(val2);
-}
-getData1();
+// async function getData1() {
+//   const val = await p2;
+//   console.log("hello1");
+//   console.log(val);
+//   const val2 = await p1;
+//   console.log("hello 2");
+//   console.log(val2);
+// }
+// getData1();
+
+p.then((res) => console.log(res));

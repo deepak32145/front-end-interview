@@ -14,3 +14,10 @@ const data1 = arr.forEach((data) => {
 });
 
 console.log(data1);
+
+const arr1 = [99, 55, 3, 2, 1, 100];
+
+arr1.sort(function (a, b) {
+  return a - b;
+});
+console.log(arr1);
