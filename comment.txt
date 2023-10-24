@@ -31,7 +31,6 @@ what is purpose of RXJS
 what are observables and observers
 
 
-150,000
 
 
 
