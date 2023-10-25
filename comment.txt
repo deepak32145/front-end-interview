@@ -31,8 +31,9 @@ what is purpose of RXJS
 what are observables and observers
 
 
-
-
+claimtype based on transactions 
+questionnaire dynamic 
+DB update 
 
 
 
