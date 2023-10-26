@@ -3,6 +3,7 @@ function generateParethesis(n) {
 
   function backtrack(current, open, close) {
     if (current.length === 2 * n) {
+      console.log(current);
       result.push(current);
       return;
     }
@@ -12,7 +13,6 @@ function generateParethesis(n) {
     if (close < open) {
       backtrack(current + ")", open, close + 1);
     }
-    console.log("call stack");
   }
   backtrack("", 0, 0);
   return result;
