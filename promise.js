@@ -14,9 +14,9 @@ function showName(text, time) {
   });
 }
 
-// showText("hello", 2000).then((val) => {
-//   console.log(val);
-// })
+showText("hello", 2000).then((val) => {
+  console.log(val);
+});
 
 // Promise.all([
 //   showText("hello", 2000),
@@ -26,17 +26,17 @@ function showName(text, time) {
 //   console.log(val);
 // });
 
-Promise.all([
-  showText("hello", 6000),
-  showName("hi", 10000),
-  Promise.reject("ok"),
-])
-  .then((val) => {
-    console.log(val);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+// Promise.all([
+//   showText("hello", 6000),
+//   showName("hi", 10000),
+//   Promise.reject("ok"),
+// ])
+//   .then((val) => {
+//     console.log(val);
+//   })
+//   .catch((error) => {
+//     console.log(error);
+//   });
 
 // function resolvePromises(promises) {
 //   let result = [];
@@ -56,3 +56,6 @@ Promise.all([
 // resolvePromises([showName("hello", 1000), showText("hi", 20000)]).then((val) =>
 //   console.log(val)
 // );
+
+
+//  

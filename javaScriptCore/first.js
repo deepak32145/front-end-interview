@@ -43,11 +43,11 @@
 //   inner(i);
 // }
 
-// for (var i = 0; i < 5; i++) {
-//   setTimeout(function () {
-//     console.log(i);
-//   }, i * 1000);
-// }
+for (var i = 0; i < 5; i++) {
+  setTimeout(function () {
+    console.log(i);
+  }, i * 1000);
+}
 
 // for (let i = 0; i < 5; i++) {
 //   setTimeout(function () {
@@ -59,13 +59,17 @@
  ****** fourth problem *****
  */
 
-// const a = { firstName: "john", lastName: "cena" };
-// const b = { firstName: "john", lastName: "cena" };
+const a = { firstName: "john", lastName: "cena" };
+const b = { firstName: "john", lastName: "cena" };
 
-// console.log(a == b);
+console.log(a == b);
 
-// console.log(a === b);
+console.log(a === b);
 
 /*
  ****** fifth problem *****
  */
+
+// const arr = [32, 45, 2, 1, 77, 11, 9, 12];
+
+// console.log(arr.map((data) => data * 2));

@@ -1,51 +1,6 @@
-//DIfference between map and ForEach 
-
-null vs undefined 
-
-what is event delegation  ul li 
-
-flatten the array question 
-
-var let const questions
-
-setTimeOut questions
-
-call , apply , bind 
-
-composition question 
-
-promise questions
-
-ways to center a div 
-
-debouncer 
-
-
-alphaNumeric
-numeric
-
-what is full form of RXJS , 
-
-what is purpose of RXJS
-
-what are observables and observers
-
-
-claimtype based on transactions 
-questionnaire dynamic 
-DB update 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
+// 

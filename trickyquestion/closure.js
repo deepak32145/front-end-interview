@@ -40,3 +40,7 @@ let count = 0;
   }
   console.log(count);
 })();
+
+const arr = [3, 4, 10, 13, 18, 19, 22];
+
+arr.sort((a, b) => a - b);
