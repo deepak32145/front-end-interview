@@ -1,26 +1,10 @@
-{
-  var a = "hi";
-}
-console.log(a);
+const regex = /^\d+(\.\d{1,2})?$/;
 
-{
-  let b = "hello";
-}
-
-console.log(b);
-
-{
-  const c = "hey";
-}
-
-console.log(c);
-
-var a = 5;
-var a = 10;
-
-let b = 5;
-let b = 10;
-
-const c = 10;
-
-c = 20;
+// Test the regex
+console.log(regex.test("123")); // true
+console.log(regex.test("123.45")); // true
+console.log(regex.test("123.456")); // false
+console.log(regex.test("123.")); // false
+console.log(regex.test(".45")); // false
+console.log(regex.test("0.5")); // true
+console.log(regex.test("0.05")); // true
