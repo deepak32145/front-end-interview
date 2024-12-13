@@ -19,3 +19,5 @@ function generateParethesis(n) {
 }
 
 console.log(generateParethesis(3));
+
+// 14708

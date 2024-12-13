@@ -1,6 +1,6 @@
 const p = new Promise((resolve, reject) => {
   setTimeout(() => {
-    resolve("promise is resolved sdafasdfasd fsdaf ");
+    resolve("promise is resolved");
   }, 5000);
 });
 
@@ -29,3 +29,5 @@ async function getData() {
 getData();
 
 p.then((res) => console.log(res));
+
+

@@ -21,3 +21,7 @@ arr1.sort(function (a, b) {
   return a - b;
 });
 console.log(arr1);
+
+const result = arr.filter((data) => {
+  return data % 2 == 0;
+});
