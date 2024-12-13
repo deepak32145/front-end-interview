@@ -1,0 +1,15 @@
+const routes: Routes = [
+  {
+    path: 'feature',
+    loadChildren: () => import('./feature/feature.module').then(m => m.FeatureModule)
+  },
+  {
+    path: '',
+    redirectTo: '/feature',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: '/feature' // Wildcard route for a 404 page
+  }
+];
