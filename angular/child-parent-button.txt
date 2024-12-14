@@ -1,0 +1,36 @@
+// child.component.ts
+import { Component, Output, EventEmitter } from '@angular/core';
+
+@Component({
+  selector: 'app-child',
+  template: `<button (click)="notifyParent()">Click Me</button>`,
+})
+export class ChildComponent {
+  @Output() buttonClicked = new EventEmitter<string>();
+
+  notifyParent() {
+    this.buttonClicked.emit('Button clicked in child!'); // Send a custom message
+  }
+}
+
+// parent.component.html
+<app-child (buttonClicked)="handleChildNotification($event)"></app-child>
+
+// parent.component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-parent',
+  template: `
+    <app-child (buttonClicked)="handleChildNotification($event)"></app-child>
+    <p>{{ message }}</p>
+  `,
+})
+export class ParentComponent {
+  message: string = '';
+
+  handleChildNotification(data: string) {
+    this.message = data; // Update parent based on child notification
+    console.log('Notification from child:', data);
+  }
+}

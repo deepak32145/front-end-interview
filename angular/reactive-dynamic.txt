@@ -1,0 +1,86 @@
+import { Component } from '@angular/core';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-reactive-form',
+  template: `
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+      <label>
+        First Name:
+        <input formControlName="firstName" />
+      </label>
+      <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched">
+        First Name is required!
+      </div>
+
+      <label>
+        Last Name:
+        <input formControlName="lastName" />
+      </label>
+
+      <label>
+        Email:
+        <input formControlName="email" />
+      </label>
+      <button type="submit" [disabled]="userForm.invalid">Submit</button>
+    </form>
+  `,
+})
+export class ReactiveFormComponent {
+  userForm = new FormGroup({
+    firstName: new FormControl('', Validators.required),
+    lastName: new FormControl(''),
+    email: new FormControl('', [Validators.required, Validators.email]),
+  });
+
+  onSubmit() {
+    console.log(this.userForm.value);
+  }
+}
+
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-dynamic-form',
+  template: `
+    <form [formGroup]="dynamicForm" (ngSubmit)="onSubmit()">
+      <div *ngFor="let field of formFields">
+        <label>{{ field.label }}</label>
+        <input
+          [type]="field.type"
+          [formControlName]="field.name"
+          [required]="field.required"
+        />
+        <div *ngIf="dynamicForm.get(field.name)?.invalid && dynamicForm.get(field.name)?.touched">
+          {{ field.label }} is required!
+        </div>
+      </div>
+      <button type="submit" [disabled]="dynamicForm.invalid">Submit</button>
+    </form>
+  `,
+})
+export class DynamicFormComponent implements OnInit {
+  formFields = [
+    { type: 'text', name: 'firstName', label: 'First Name', required: true },
+    { type: 'email', name: 'email', label: 'Email Address', required: true },
+    { type: 'number', name: 'age', label: 'Age', required: false },
+  ];
+
+  dynamicForm!: FormGroup;
+
+  constructor(private fb: FormBuilder) {}
+
+  ngOnInit() {
+    this.dynamicForm = this.fb.group({});
+    this.formFields.forEach(field => {
+      const validators = field.required ? [Validators.required] : [];
+      this.dynamicForm.addControl(field.name, new FormControl('', validators));
+    });
+  }
+
+  onSubmit() {
+    console.log(this.dynamicForm.value);
+  }
+}
