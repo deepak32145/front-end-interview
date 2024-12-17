@@ -6,6 +6,10 @@ let nums = {
 
 multiplyNumeric(nums);
 
+function multiplyNumeric(nums) {
+  // execute this code only if the value is a number
+}
+
 function multiplyNumeric(obj) {
   for (let key in obj) {
     if (typeof obj[key] === "number") {

@@ -6,7 +6,4 @@ let c = null;
 
 console.log(typeof c);
 
-console.log(null == undefined);
-console.log(null === undefined);
-
-console.log(a);
+console.log(typeof c === typeof b);
