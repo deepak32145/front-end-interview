@@ -1,0 +1,69 @@
+<form [formGroup]="userForm" (ngSubmit)="submitForm()">
+  <div formArrayName="users">
+    <div
+      *ngFor="let user of usersArray.controls; let i = index"
+      [formGroupName]="i"
+    >
+      <h3>{{ users[i].name }}</h3>
+
+      <!-- Radio Options -->
+      <label>
+        <input
+          type="radio"
+          [value]="'Hispanic or Latino'"
+          formControlName="ethnicity"
+          (change)="toggleEthnicOptions(i)"
+        />
+        Hispanic or Latino
+      </label>
+      <label>
+        <input
+          type="radio"
+          [value]="'Not Hispanic or Latino'"
+          formControlName="ethnicity"
+          (change)="toggleEthnicOptions(i)"
+        />
+        Not Hispanic or Latino
+      </label>
+      <label>
+        <input
+          type="radio"
+          [value]="'I do not wish to identify ethnicity'"
+          formControlName="ethnicity"
+          (change)="toggleEthnicOptions(i)"
+        />
+        I do not wish to identify ethnicity
+      </label>
+
+      <!-- Ethnic Options -->
+      <div
+        *ngIf="user.get('ethnicity')?.value === 'Hispanic or Latino'"
+        formGroupName="ethnicDetails"
+      >
+        <div>
+          <div *ngFor="let option of ethnicOptions; let j = index">
+            <label>
+              <input
+                type="checkbox"
+                [value]="option"
+                (change)="updateSelectedOptions(i, option, $event.target.checked)"
+              />
+              {{ option }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Other Option -->
+        <label>
+          Other:
+          <input
+            type="text"
+            formControlName="other"
+            placeholder="Specify other ethnicity"
+          />
+        </label>
+      </div>
+    </div>
+  </div>
+  <button type="submit">Submit</button>
+</form>
