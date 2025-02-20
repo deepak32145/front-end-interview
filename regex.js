@@ -1,17 +1,18 @@
+function formatPhoneNumber(input: string): string {
+  // Remove all non-numeric characters
+  const digits = input.replace(/\D/g, "");
 
-onMobileNumberInput(index: number) {
-    const control = this.users.at(index).get('mobileNumber');
-    if (control) {
-      control.setValue(this.formatPhoneNumber(control.value), { emitEvent: false });
-    }
+  // Ensure it has exactly 10 digits
+  if (digits.length !== 10) {
+      return "Invalid Number";
   }
 
-    // Function to format a phone number
-    formatPhoneNumber(value: string): string {
-        const cleaned = value.replace(/\D/g, ''); // Remove non-numeric characters
-        if (cleaned.length === 10) {
-          return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
-        }
-        return value; // Return original value if it's not a valid 10-digit number
-      }
-    
+  // Format the number (XXX) XXX-XXXX
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+}
+
+// 🔹 Example Usage:
+console.log(formatPhoneNumber("999-999-1234"));   // (999) 999-1234
+console.log(formatPhoneNumber("9999991234"));     // (999) 999-1234
+console.log(formatPhoneNumber("(999)-999-1234")); // (999) 999-1234
+console.log(formatPhoneNumber("12345"));          // Invalid Number
