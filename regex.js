@@ -1,7 +1,12 @@
 async function importAllTests() {
-  const modules = import.meta.glob('./**/*.spec.ts');
-  for (const path in modules) {
-    await modules[path]();
-  }
+  const testModules = import.meta.glob('./**/*.spec.ts', { eager: true });
+
+  Object.values(testModules).forEach((module) => {
+    // Execute the test module
+    if (typeof module === 'function') {
+      module();
+    }
+  });
 }
+
 importAllTests();
