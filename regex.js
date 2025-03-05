@@ -1,12 +1,4 @@
-npm install --save-dev \
-  webpack@5 webpack-cli@5 webpack-dev-server@4 \
-  karma-webpack@5 ts-loader@9 \
-  karma karma-chrome-launcher \
-  karma-jasmine karma-jasmine-html-reporter \
-  @angular-devkit/build-angular
-
-
-  const webpack = require('webpack');
+const webpack = require('webpack');
 
 module.exports = function (config) {
   config.set({
@@ -20,7 +12,17 @@ module.exports = function (config) {
     },
     webpack: {
       mode: 'development',
+      module: {
+        rules: [
+          {
+            test: /\.ts$/,
+            use: 'ts-loader',
+            exclude: /node_modules/,
+          }
+        ]
+      },
       resolve: {
+        extensions: ['.ts', '.js'],
         fallback: {
           "crypto": false,
           "path": false,
