@@ -1,16 +1,3 @@
-async function importAllTests() {
-  const testFiles = Object.keys((globalThis as any).__webpack_modules__).filter((path) =>
-    /\.spec\.ts$/.test(path)
-  );
-
-  for (const file of testFiles) {
-    await import(/* @vite-ignore */ file);
-  }
-}
-
-importAllTests();
-
-
 module.exports = function (config) {
   config.set({
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
@@ -22,14 +9,24 @@ module.exports = function (config) {
     },
     webpack: {
       mode: 'development',
+      module: {
+        rules: [
+          {
+            test: /\.ts$/,
+            use: 'ts-loader',
+            exclude: /node_modules/,
+          },
+        ],
+      },
       resolve: {
+        extensions: ['.ts', '.js'],
         fallback: {
-          "fs": false,
-          "path": false
-        }
-      }
+          fs: false,
+          path: false,
+        },
+      },
     },
     browsers: ['Chrome'],
-    singleRun: false
+    singleRun: false,
   });
 };
