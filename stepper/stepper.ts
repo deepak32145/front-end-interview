@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-stepper-form',
@@ -11,7 +12,12 @@ export class StepperFormComponent implements OnInit {
   firstFormGroup!: FormGroup;
   apiResponse: any;
 
-  constructor(private _formBuilder: FormBuilder, private http: HttpClient) {}
+  constructor(
+    private _formBuilder: FormBuilder,
+    private http: HttpClient,
+    private dialogRef: MatDialogRef<StepperFormComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
 
   ngOnInit(): void {
     this.firstFormGroup = this._formBuilder.group({
@@ -27,7 +33,6 @@ export class StepperFormComponent implements OnInit {
   goToSecondStep() {
     const payload = this.firstFormGroup.value;
 
-    // Replace with your API endpoint
     this.http.post('https://jsonplaceholder.typicode.com/posts', payload).subscribe({
       next: (res) => {
         this.apiResponse = res;
@@ -40,5 +45,10 @@ export class StepperFormComponent implements OnInit {
 
   submit() {
     alert('Form submitted!');
+    this.dialogRef.close({ status: 'submitted', formData: this.firstFormGroup.value });
+  }
+
+  close() {
+    this.dialogRef.close();
   }
 }
