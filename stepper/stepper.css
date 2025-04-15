@@ -1,0 +1,22 @@
+::ng-deep .custom-stepper .mat-step-header {
+    background: linear-gradient(to right, #1976d2, #42a5f5);
+    color: white;
+    font-weight: bold;
+    clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%);
+    margin-right: 8px;
+  }
+  
+  .form-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  
+  .button-row {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
