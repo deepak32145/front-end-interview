@@ -1,22 +1,41 @@
-::ng-deep .custom-stepper .mat-step-header {
-    background: linear-gradient(to right, #1976d2, #42a5f5);
-    color: white;
-    font-weight: bold;
-    clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%);
-    margin-right: 8px;
-  }
-  
-  .form-fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 20px;
-  }
-  
-  .button-row {
-    margin-top: 24px;
+::ng-deep .mat-horizontal-stepper-header-container {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: center;
+    gap: 16px; // Adds space between headers
   }
   
+  ::ng-deep .mat-step-header {
+    background: #e6f4ea; /* light green */
+    border: 2px solid #4caf50; /* darker green */
+    border-radius: 12px;
+    padding: 12px 24px;
+    color: #2e7d32;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: background 0.3s, transform 0.3s;
+  }
+  
+  ::ng-deep .mat-step-header:hover {
+    background: #d0eddb;
+    transform: scale(1.02);
+    cursor: pointer;
+  }
+  
+  ::ng-deep .mat-step-header .mat-step-label {
+    color: inherit;
+  }
+  
+  ::ng-deep .mat-step-icon {
+    background-color: #4caf50 !important; /* Green circle */
+    color: white !important;
+  }
+  ::ng-deep .mat-step-header {
+    clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%);
+    margin-right: -20px;
+    z-index: 1;
+  }
+  
+  ::ng-deep .mat-step-header:last-child {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+    
