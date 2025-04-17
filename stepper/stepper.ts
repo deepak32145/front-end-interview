@@ -1,61 +1,53 @@
-import { Component, OnInit, Inject , AfterViewInit , ViewChild, viewChild } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatStepper } from '@angular/material/stepper';
 
 @Component({
-  selector: 'app-lines-loans-dialog',
-  templateUrl: './lines-loans-dialog.component.html',
-  styleUrl: './lines-loans-dialog.component.css'
+  selector: 'app-user-stepper',
+  templateUrl: './user-stepper.component.html',
+  styleUrls: ['./user-stepper.component.css']
 })
-export class LinesLoansDialogComponent implements OnInit , AfterViewInit {
- @ViewChild('stepper') stepper!: MatStepper;
-  firstFormGroup!: FormGroup;
-  apiResponse: any;
-  skipFirstStep = false;
+export class UserStepperComponent implements OnInit {
+  @ViewChild('stepper') stepper!: MatStepper;
 
+  userType: 'Controller' | 'Guarantor' = 'Controller';
+  disbursementForm!: FormGroup;
+  autoDebitForm!: FormGroup;
+
+  approvedAmount = 10000;
+  initialDisbursementToggle = false;
+  useBankAccount = true;
 
   constructor(
-    private _formBuilder: FormBuilder,
-    private http: HttpClient,
-    private dialogRef: MatDialogRef<LinesLoansDialogComponent>,
+    private fb: FormBuilder,
+    private dialogRef: MatDialogRef<UserStepperComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.firstFormGroup = this._formBuilder.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', Validators.required],
-      city: ['', Validators.required],
-      country: ['', Validators.required],
-      age : ['', Validators.required],
+    this.userType = data?.userType || 'Controller';
+  }
+
+  ngOnInit(): void {
+    this.disbursementForm = this.fb.group({
+      initialDisbursementToggle: [false],
+      disbursementAmount: [null, Validators.min(1)],
+    });
+
+    this.autoDebitForm = this.fb.group({
+      useBankAccount: [true],
+      bankName: [''],
+      accountNumber: [''],
+      routingNumber: [''],
     });
   }
-  ngOnInit(): void {
-    if (this.data?.skipFirstStep) {
-      this.skipFirstStep = true;
-    }
-  }
-  ngAfterViewInit() {
-    console.log('stepper', this.stepper);
-    if (this.skipFirstStep) {
-      //setTimeout(() => this.stepperRef.selectedIndex = 1, 0);
-    }
-  }
 
-  goToSecondStep() {
-    console.log('stepper', this.stepper);
-    this.stepper.next();
-  }
-
-  submit() {
-    alert('Form submitted!');
-    this.dialogRef.close({ status: 'submitted', formData: this.firstFormGroup.value });
-  }
-
-  close() {
+  submitController() {
+    alert('Submitted Controller Flow');
     this.dialogRef.close();
   }
 
+  submitGuarantor() {
+    alert('Guarantor Accepted');
+    this.dialogRef.close();
+  }
 }
