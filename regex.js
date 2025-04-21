@@ -1,51 +1,8 @@
-const webpack = require('webpack');
-
-module.exports = function (config) {
-  config.set({
-    basePath: '',
-    frameworks: ['jasmine', '@angular-devkit/build-angular'],
-    files: [
-      { pattern: 'src/test.ts', watched: false }
-    ],
-    preprocessors: {
-      'src/test.ts': ['webpack']
-    },
-    webpack: {
-      mode: 'development',
-      module: {
-        rules: [
-          {
-            test: /\.ts$/,
-            use: 'ts-loader',
-            exclude: /node_modules/,
-          }
-        ]
-      },
-      resolve: {
-        extensions: ['.ts', '.js'],
-        fallback: {
-          "crypto": false,
-          "path": false,
-          "fs": false
-        }
-      },
-      plugins: [
-        new webpack.ProvidePlugin({
-          process: 'process/browser',
-        }),
-      ],
-    },
-    webpackMiddleware: {
-      stats: 'errors-only'
-    },
-    plugins: [
-      require('karma-webpack'),
-      require('karma-jasmine'),
-      require('karma-chrome-launcher'),
-      require('karma-jasmine-html-reporter'),
-      require('@angular-devkit/build-angular/plugins/karma')
-    ],
-    browsers: ['Chrome'],
-    singleRun: false,
-  });
-};
+bankName: ['', [Validators.required, Validators.pattern("^[A-Za-z\\s&.,'-]{2,50}$")]],
+accountNumber: ['', [Validators.required, Validators.pattern("^[0-9]{8,20}$")]], // Allows 8-20 digit numbers
+abaRoutingNumber: ['', [Validators.required, Validators.pattern("^[0-9]{9}$")]], // Must be 9 digits
+wireRoutingNumber: ['', [Validators.required, Validators.pattern("^[0-9]{9}$")]], // Same format
+addressLine1: ['', [Validators.required, Validators.pattern("^[A-Za-z0-9\\s#.,'-]{5,100}$")]],
+addressLine2: ['', [Validators.pattern("^[A-Za-z0-9\\s#.,'-]{0,100}$")]], // Optional
+city: ['', [Validators.required, Validators.pattern("^[A-Za-z\\s-]{2,50}$")]],
+zipcode: ['', [Validators.required, Validators.pattern("^[0-9]{5}(-[0-9]{4})?$")]] // 
