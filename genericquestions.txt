@@ -1,0 +1,81 @@
+ Core React Concepts
+Explain the Virtual DOM and how React uses it.
+
+What are the key differences between class components and functional components with hooks?
+
+How does React's reconciliation algorithm work?
+
+What are the rules of hooks, and why are they important?
+
+What are the performance benefits of useMemo and useCallback? When would you use them?
+
+🔹 Advanced Hooks and State Management
+How would you manage complex state logic across a large application?
+
+Compare useReducer with useState. When is one preferable over the other?
+
+What are custom hooks? Can you give an example use case from a past project?
+
+How do you handle derived state in React?
+
+Describe how you'd implement optimistic UI updates.
+
+🔹 React Performance Optimization
+How do you identify and fix performance bottlenecks in a React app?
+
+What tools have you used for profiling and optimizing React apps?
+
+How does React.memo work, and when should it be used?
+
+What is lazy loading in React? How would you implement it for routes and components?
+
+How do you avoid unnecessary re-renders in a large component tree?
+
+🔹 Component Architecture and Code Organization
+How do you structure a scalable React project?
+
+What’s your approach to creating reusable and composable components?
+
+How would you implement feature toggles in a React app?
+
+Describe a time you refactored a large React component and why.
+
+What’s the difference between controlled and uncontrolled components?
+
+🔹 React + TypeScript (if applicable)
+What are the benefits of using TypeScript in a React project?
+
+How do you type functional components, props, and hooks in TypeScript?
+
+How do you handle generic types in custom hooks or components?
+
+🔹 React Ecosystem & Tooling
+What state management libraries have you used (e.g., Redux, Zustand, Jotai, Recoil)? Which do you prefer and why?
+
+How do you handle side effects in Redux (e.g., Redux Thunk vs Redux Saga)?
+
+What is your approach to testing React components (e.g., React Testing Library, Jest)?
+
+Describe your CI/CD pipeline for a React application.
+
+🔹 Real-World Scenarios
+How would you migrate a legacy React project from class components to hooks?
+
+What’s the most complex bug you’ve encountered in React, and how did you solve it?
+
+How would you handle authentication and role-based routing in a React SPA?
+
+How do you manage form validation and dynamic form fields?
+
+Can you walk through the architecture of your last production React app?
+
+🔹 Soft Skills / Leadership
+How do you conduct code reviews for React code?
+
+How do you mentor junior developers on React best practices?
+
+How do you make architectural decisions in a React project with a team?
+
+How do you stay up to date with the React ecosystem?
+
+How do you prioritize tech debt versus feature development in a React project?
