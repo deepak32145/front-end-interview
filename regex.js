@@ -1,1 +1,1 @@
-compareIndustries = (a: any, b: any) => a && b ? a.value === b.value : a === b;
+Validators.pattern(/^(?!.*\t).*/)
