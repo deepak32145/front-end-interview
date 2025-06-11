@@ -1,1 +1,1 @@
-Validators.pattern(/^(?!.*\t).*/)
+Validators.pattern("^(?!.*\\t).*")
