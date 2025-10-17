@@ -1,0 +1,245 @@
+landing component
+
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-landing',
+  templateUrl: './landing.component.html',
+  styleUrls: ['./landing.component.scss']
+})
+export class LandingComponent {
+  loading = false;
+
+  constructor(private router: Router) {}
+
+  startFlow() {
+    this.loading = true;
+
+    // Mock API simulation
+    setTimeout(() => {
+      const customerType = Math.random() > 0.5 ? 'soleProp' : 'llc';
+      this.router.navigate(['/flow'], { state: { customerType } });
+    }, 1000);
+  }
+}
+
+
+<div class="landing-container">
+  <h1>Welcome to the Application</h1>
+  <p>Click below to start your business verification flow.</p>
+
+  <button mat-raised-button color="primary" (click)="startFlow()" [disabled]="loading">
+    {{ loading ? 'Starting...' : 'Start Now' }}
+  </button>
+</div>
+
+flow config
+
+export const FLOW_CONFIG = {
+  entry: {
+    start: 'businessType',
+    steps: {
+      businessType: {
+        component: 'BusinessTypeQuestionComponent',
+        next: (data: any) => {
+          if (data.answer === 'llc') return 'llcOwnership';
+          if (data.answer === 'soleProp') return 'solePropOwnership';
+          return null;
+        }
+      },
+      llcOwnership: {
+        component: 'LlcOwnershipComponent',
+        next: (data: any) => (data.owns50 ? 'llcNextStep' : 'reject')
+      },
+      solePropOwnership: {
+        component: 'SolePropOwnershipComponent',
+        next: (data: any) => 'solePropNextStep'
+      },
+      llcNextStep: {
+        component: 'LlcNextStepComponent'
+      },
+      solePropNextStep: {
+        component: 'SolePropNextStepComponent'
+      },
+      reject: {
+        component: 'RejectScreenComponent'
+      }
+    }
+  }
+};
+
+
+flow state service
+
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class FlowStateService {
+  private state: Record<string, any> = {};
+
+  setStepData(stepKey: string, data: any): void {
+    this.state[stepKey] = data;
+  }
+
+  getStepData(stepKey: string): any {
+    return this.state[stepKey];
+  }
+
+  clear(): void {
+    this.state = {};
+  }
+}
+
+decision flow controller
+
+
+import { Component, Injector } from '@angular/core';
+import { FLOW_CONFIG } from '../../flow-config';
+import { FlowStateService } from '../../flow-state.service';
+import {
+  BusinessTypeQuestionComponent,
+  LlcOwnershipComponent,
+  LlcNextStepComponent,
+  SolePropOwnershipComponent,
+  SolePropNextStepComponent,
+  RejectScreenComponent
+} from '../../steps'; // Export index barrel from steps folder
+
+@Component({
+  selector: 'app-decision-flow',
+  templateUrl: './decision-flow.component.html',
+  styleUrls: ['./decision-flow.component.scss']
+})
+export class DecisionFlowComponent {
+  customerType!: 'soleProp' | 'llc';
+  currentStepKey!: string;
+  currentComponent: any;
+  currentInjector: Injector;
+  flowStack: string[] = [];
+
+  constructor(private injector: Injector, private stateService: FlowStateService) {}
+
+  ngOnInit() {
+    const navState = history.state;
+    this.customerType = navState.customerType || 'soleProp';
+    this.startFlow();
+  }
+
+  startFlow() {
+    const flow = FLOW_CONFIG.entry;
+    this.currentStepKey = flow.start;
+    this.flowStack = [];
+    this.stateService.clear();
+    this.loadStep(flow.steps[this.currentStepKey]);
+  }
+
+  loadStep(stepConfig: any) {
+    const component = this.resolveComponent(stepConfig.component);
+    const savedData = this.stateService.getStepData(this.currentStepKey);
+
+    this.currentComponent = component;
+    this.currentInjector = Injector.create({
+      providers: [
+        { provide: 'onContinue', useValue: (data: any) => this.goNext(data) },
+        { provide: 'onBack', useValue: () => this.goBack() },
+        { provide: 'customerType', useValue: this.customerType },
+        { provide: 'savedData', useValue: savedData }
+      ],
+      parent: this.injector
+    });
+  }
+
+  goNext(formData: any) {
+    const flow = FLOW_CONFIG.entry;
+    const currentStep = flow.steps[this.currentStepKey];
+    this.stateService.setStepData(this.currentStepKey, formData);
+
+    const nextKey =
+      typeof currentStep.next === 'function' ? currentStep.next(formData) : currentStep.next;
+    if (!nextKey) return;
+
+    this.flowStack.push(this.currentStepKey);
+    this.currentStepKey = nextKey;
+    this.loadStep(flow.steps[nextKey]);
+  }
+
+  goBack() {
+    if (this.flowStack.length === 0) return;
+    this.currentStepKey = this.flowStack.pop()!;
+    const flow = FLOW_CONFIG.entry;
+    this.loadStep(flow.steps[this.currentStepKey]);
+  }
+
+  get canGoBack() {
+    return this.flowStack.length > 0;
+  }
+
+  resolveComponent(name: string) {
+    const map = {
+      BusinessTypeQuestionComponent,
+      LlcOwnershipComponent,
+      LlcNextStepComponent,
+      SolePropOwnershipComponent,
+      SolePropNextStepComponent,
+      RejectScreenComponent
+    };
+    return map[name];
+  }
+}
+
+decision html 
+
+<div class="flow-container">
+  <ng-container *ngIf="currentComponent">
+    <ng-container *ngComponentOutlet="currentComponent; injector: currentInjector"></ng-container>
+  </ng-container>
+
+  <div *ngIf="canGoBack" class="back-btn">
+    <button mat-stroked-button color="primary" (click)="goBack()">← Back</button>
+  </div>
+</div>
+
+
+business controller .ts
+
+import { Component, Inject, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-business-type-question',
+  templateUrl: './business-type-question.component.html',
+  styleUrls: ['./business-type-question.component.scss']
+})
+export class BusinessTypeQuestionComponent {
+  @Input() customerType!: 'soleProp' | 'llc';
+  @Input() savedData: any;
+  answer: 'soleProp' | 'llc' | null = null;
+
+  constructor(@Inject('onContinue') public onContinue: any) {}
+
+  ngOnInit() {
+    if (this.savedData?.answer) {
+      this.answer = this.savedData.answer;
+    }
+  }
+
+  continue() {
+    if (this.answer) {
+      this.onContinue({ answer: this.answer, customerType: this.customerType });
+    }
+  }
+}
+
+
+<h3 *ngIf="customerType === 'soleProp'">Are you still a Sole Proprietor?</h3>
+<h3 *ngIf="customerType === 'llc'">Are you still an LLC?</h3>
+
+<mat-radio-group [(ngModel)]="answer">
+  <mat-radio-button *ngIf="customerType === 'soleProp'" value="soleProp">Yes, I'm a Sole Prop</mat-radio-button>
+  <mat-radio-button *ngIf="customerType === 'soleProp'" value="llc">No, I'm an LLC</mat-radio-button>
+
+  <mat-radio-button *ngIf="customerType === 'llc'" value="llc">Yes, I'm an LLC</mat-radio-button>
+  <mat-radio-button *ngIf="customerType === 'llc'" value="soleProp">No, I'm a Sole Prop</mat-radio-button>
+</mat-radio-group>
+
+<button mat-raised-button color="primary" (click)="continue()" [disabled]="!answer">Continue</button>
