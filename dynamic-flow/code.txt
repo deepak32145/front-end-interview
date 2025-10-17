@@ -1,184 +1,103 @@
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Injector } from '@angular/core';
+import { FLOW_CONFIG } from '../../flow-config';
+import { FlowStateService } from '../../flow-state.service';
+import {
+  BusinessTypeQuestionComponent,
+  LlcOwnershipComponent,
+  LlcNextStepComponent,
+  SolePropOwnershipComponent,
+  SolePropNextStepComponent,
+  RejectScreenComponent
+} from '../../steps'; // Export index barrel from steps folder
 
 @Component({
-  selector: 'app-business-type-question',
-  templateUrl: './business-type-question.component.html',
-  styleUrls: ['./business-type-question.component.scss']
+  selector: 'app-decision-flow',
+  templateUrl: './decision-flow.component.html',
+  styleUrls: ['./decision-flow.component.scss']
 })
-export class BusinessTypeQuestionComponent {
-  @Input() customerType!: 'soleProp' | 'llc';
-  @Input() savedData: any;
-  answer: 'soleProp' | 'llc' | null = null;
+export class DecisionFlowComponent {
+  customerType!: 'soleProp' | 'llc';
+  currentStepKey!: string;
+  currentComponent: any;
+  currentInjector: Injector;
+  flowStack: string[] = [];
 
-  constructor(@Inject('onContinue') public onContinue: any) {}
+  constructor(private injector: Injector, private stateService: FlowStateService) {}
 
   ngOnInit() {
-    if (this.savedData?.answer) {
-      this.answer = this.savedData.answer;
-    }
+    const navState = history.state;
+    this.customerType = navState.customerType || 'soleProp';
+    this.startFlow();
   }
 
-  continue() {
-    if (this.answer) {
-      this.onContinue({ answer: this.answer, customerType: this.customerType });
-    }
-  }
-}
-
-
-<h3 *ngIf="customerType === 'soleProp'">Are you still a Sole Proprietor?</h3>
-<h3 *ngIf="customerType === 'llc'">Are you still an LLC?</h3>
-
-<mat-radio-group [(ngModel)]="answer">
-  <mat-radio-button *ngIf="customerType === 'soleProp'" value="soleProp">
-    Yes, I'm a Sole Proprietor
-  </mat-radio-button>
-  <mat-radio-button *ngIf="customerType === 'soleProp'" value="llc">
-    No, I'm an LLC
-  </mat-radio-button>
-
-  <mat-radio-button *ngIf="customerType === 'llc'" value="llc">
-    Yes, I'm an LLC
-  </mat-radio-button>
-  <mat-radio-button *ngIf="customerType === 'llc'" value="soleProp">
-    No, I'm a Sole Proprietor
-  </mat-radio-button>
-</mat-radio-group>
-
-<button mat-raised-button color="primary" (click)="continue()" [disabled]="!answer">Continue</button>
-
-
-import { Component, Inject, Input } from '@angular/core';
-
-@Component({
-  selector: 'app-llc-ownership',
-  templateUrl: './llc-ownership.component.html',
-  styleUrls: ['./llc-ownership.component.scss']
-})
-export class LlcOwnershipComponent {
-  @Input() savedData: any;
-  owns50: boolean | null = null;
-
-  constructor(@Inject('onContinue') public onContinue: any) {}
-
-  ngOnInit() {
-    if (this.savedData?.owns50 !== undefined) {
-      this.owns50 = this.savedData.owns50;
-    }
+  startFlow() {
+    const flow = FLOW_CONFIG.entry;
+    this.currentStepKey = flow.start;
+    this.flowStack = [];
+    this.stateService.clear();
+    this.loadStep(flow.steps[this.currentStepKey]);
   }
 
-  continue() {
-    this.onContinue({ owns50: this.owns50 });
+  loadStep(stepConfig: any) {
+    const component = this.resolveComponent(stepConfig.component);
+    const savedData = this.stateService.getStepData(this.currentStepKey);
+
+    this.currentComponent = component;
+    this.currentInjector = Injector.create({
+      providers: [
+        { provide: 'onContinue', useValue: (data: any) => this.goNext(data) },
+        { provide: 'onBack', useValue: () => this.goBack() },
+        { provide: 'customerType', useValue: this.customerType },
+        { provide: 'savedData', useValue: savedData }
+      ],
+      parent: this.injector
+    });
   }
-}
 
+  goNext(formData: any) {
+    const flow = FLOW_CONFIG.entry;
+    const currentStep = flow.steps[this.currentStepKey];
+    this.stateService.setStepData(this.currentStepKey, formData);
 
-<h3>Tell us about your LLC</h3>
-<p>Do you own 50% or more of this business?</p>
+    const nextKey =
+      typeof currentStep.next === 'function' ? currentStep.next(formData) : currentStep.next;
+    if (!nextKey) return;
 
-<mat-radio-group [(ngModel)]="owns50">
-  <mat-radio-button [value]="true">Yes</mat-radio-button>
-  <mat-radio-button [value]="false">No</mat-radio-button>
-</mat-radio-group>
+    this.flowStack.push(this.currentStepKey);
+    this.currentStepKey = nextKey;
+    this.loadStep(flow.steps[nextKey]);
+  }
 
-<button mat-raised-button color="primary" (click)="continue()" [disabled]="owns50 === null">
-  Continue
-</button>
+  goBack() {
+    if (this.flowStack.length === 0) return;
+    this.currentStepKey = this.flowStack.pop()!;
+    const flow = FLOW_CONFIG.entry;
+    this.loadStep(flow.steps[this.currentStepKey]);
+  }
 
+  get canGoBack() {
+    return this.flowStack.length > 0;
+  }
 
-import { Component, Inject } from '@angular/core';
-
-@Component({
-  selector: 'app-llc-next-step',
-  templateUrl: './llc-next-step.component.html',
-  styleUrls: ['./llc-next-step.component.scss']
-})
-export class LlcNextStepComponent {
-  constructor(@Inject('onContinue') public onContinue: any) {}
-
-  continue() {
-    this.onContinue({});
+  resolveComponent(name: string) {
+    const map = {
+      BusinessTypeQuestionComponent,
+      LlcOwnershipComponent,
+      LlcNextStepComponent,
+      SolePropOwnershipComponent,
+      SolePropNextStepComponent,
+      RejectScreenComponent
+    };
+    return map[name];
   }
 }
 
+<div class="flow-container">
+  <ng-container *ngIf="currentComponent">
+    <ng-container *ngComponentOutlet="currentComponent; injector: currentInjector"></ng-container>
+  </ng-container>
 
-<h3>Thanks for confirming your ownership!</h3>
-<p>Next, we’ll ask for your LLC’s tax identification details.</p>
-
-<button mat-raised-button color="primary" (click)="continue()">Continue</button>
-
-
-import { Component, Inject, Input } from '@angular/core';
-
-@Component({
-  selector: 'app-sole-prop-ownership',
-  templateUrl: './sole-prop-ownership.component.html',
-  styleUrls: ['./sole-prop-ownership.component.scss']
-})
-export class SolePropOwnershipComponent {
-  @Input() savedData: any;
-  earnsFromBusiness: boolean | null = null;
-
-  constructor(@Inject('onContinue') public onContinue: any) {}
-
-  ngOnInit() {
-    if (this.savedData?.earnsFromBusiness !== undefined) {
-      this.earnsFromBusiness = this.savedData.earnsFromBusiness;
-    }
-  }
-
-  continue() {
-    this.onContinue({ earnsFromBusiness: this.earnsFromBusiness });
-  }
-}
-
-
-<h3>Tell us about your business</h3>
-<p>Do you earn your income primarily from this business?</p>
-
-<mat-radio-group [(ngModel)]="earnsFromBusiness">
-  <mat-radio-button [value]="true">Yes</mat-radio-button>
-  <mat-radio-button [value]="false">No</mat-radio-button>
-</mat-radio-group>
-
-<button mat-raised-button color="primary" (click)="continue()" [disabled]="earnsFromBusiness === null">
-  Continue
-</button>
-
-
-import { Component, Inject } from '@angular/core';
-
-@Component({
-  selector: 'app-sole-prop-next-step',
-  templateUrl: './sole-prop-next-step.component.html',
-  styleUrls: ['./sole-prop-next-step.component.scss']
-})
-export class SolePropNextStepComponent {
-  constructor(@Inject('onContinue') public onContinue: any) {}
-
-  continue() {
-    this.onContinue({});
-  }
-}
-
-
-<h3>Thanks for confirming!</h3>
-<p>We’ll now verify your business information and documents.</p>
-
-<button mat-raised-button color="primary" (click)="continue()">Continue</button>
-
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-reject-screen',
-  templateUrl: './reject-screen.component.html',
-  styleUrls: ['./reject-screen.component.scss']
-})
-export class RejectScreenComponent {}
-
-
-<div class="reject-container">
-  <h3>Sorry, we cannot proceed with your application.</h3>
-  <p>Please review your eligibility or contact support.</p>
+  <div *ngIf="canGoBack" class="back-btn">
+    <button mat-stroked-button color="primary" (click)="goBack()">← Back</button>
+  </div>
 </div>
