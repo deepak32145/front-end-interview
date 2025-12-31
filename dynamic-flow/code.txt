@@ -1,0 +1,69 @@
+import { Component, Inject } from '@angular/core';
+
+@Component({
+  selector: 'app-business-type-question',
+  templateUrl: './business-type-question.component.html',
+  styleUrls: ['./business-type-question.component.scss']
+})
+export class BusinessTypeQuestionComponent {
+  answer: 'soleProp' | 'llc' | null = null;
+  options: { value: 'soleProp' | 'llc'; label: string }[] = [];
+
+  constructor(
+    @Inject('onContinue') public onContinue: any,
+    @Inject('customerType') public customerType: 'soleProp' | 'llc',
+    @Inject('savedData') public savedData: any
+  ) {}
+
+  ngOnInit() {
+    // Define dropdown options based on user type
+    if (this.customerType === 'soleProp') {
+      this.options = [
+        { value: 'soleProp', label: 'Yes, I’m a Sole Proprietor' },
+        { value: 'llc', label: 'No, I’m an LLC' }
+      ];
+    } else {
+      this.options = [
+        { value: 'llc', label: 'Yes, I’m an LLC' },
+        { value: 'soleProp', label: 'No, I’m a Sole Proprietor' }
+      ];
+    }
+
+    // Preselect value
+    if (this.savedData?.answer) {
+      this.answer = this.savedData.answer;
+    } else {
+      // Default selection = current customerType
+      this.answer = this.customerType;
+    }
+  }
+
+  continue() {
+    if (this.answer) {
+      this.onContinue({ answer: this.answer, customerType: this.customerType });
+    }
+  }
+}
+
+<div class="question-container">
+  <h3 *ngIf="customerType === 'soleProp'">Are you still a Sole Proprietor?</h3>
+  <h3 *ngIf="customerType === 'llc'">Are you still an LLC?</h3>
+
+  <mat-form-field appearance="fill" class="w-full">
+    <mat-label>Select your current business type</mat-label>
+    <mat-select [(value)]="answer">
+      <mat-option *ngFor="let opt of options" [value]="opt.value">
+        {{ opt.label }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="continue()"
+    [disabled]="!answer"
+  >
+    Continue
+  </button>
+</div>

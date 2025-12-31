@@ -1,5 +1,5 @@
 var person = {
-  name: "Deepak",
+  name: "john",
   hello: function (data) {
     console.log(this.name + "says hello" + data);
   },

@@ -1,0 +1,28 @@
+landing component.ts
+
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-landing',
+  templateUrl: './landing.component.html',
+  styleUrls: ['./landing.component.scss']
+})
+export class LandingComponent {
+  loading = false;
+
+  constructor(private router: Router) {}
+
+  startFlow() {
+    this.loading = true;
+
+    // Mock API simulation
+    setTimeout(() => {
+      const customerType = Math.random() > 0.5 ? 'soleProp' : 'llc';
+      this.router.navigate(['/flow'], { state: { customerType } });
+    }, 1000);
+  }
+}
+
+
+lan

@@ -1,21 +1,22 @@
-function generateParethesis(n) {
-  const result = [];
+function parseApiDate(input) {
+  if (!input) return null;
 
-  function backtrack(current, open, close) {
-    if (current.length === 2 * n) {
-      result.push(current);
-      return;
-    }
-    if (open < n) {
-      backtrack(current + "(", open + 1, close);
-    }
-    if (close < open) {
-      backtrack(current + ")", open, close + 1);
-    }
-    console.log("call stack");
+  // Case: "yyyy-mm-dd"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    const [year, month, day] = input.split('-').map(Number);
+    return new Date(year, month - 1, day); // Local time, no shift
   }
-  backtrack("", 0, 0);
-  return result;
+
+  // Case: "yyyy-mm-dd hh:mm:ss.sss"
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/.test(input)) {
+    // Replace space with 'T' to make it ISO-like (still local)
+    const isoLike = input.replace(' ', 'T');
+    return new Date(isoLike);
+  }
+
+  // Case: Proper ISO date string or fallback
+  return new Date(input); // Will be parsed as UTC or local based on format
 }
 
-console.log(generateParethesis(3));
+console.log(parseApiDate("2023-10-05")); // Local date
+console.log(parseApiDate("2023-10-05 14:30:00.000")); // Local date with time
