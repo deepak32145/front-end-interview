@@ -5,7 +5,6 @@ function generateParethesis(n) {
     if (current.length === 2 * n) {
       console.log(current);
       result.push(current);
-      return;
     }
     if (open < n) {
       backtrack(current + "(", open + 1, close);
