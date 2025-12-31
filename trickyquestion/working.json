@@ -1,0 +1,178 @@
+{
+    "appStatusTxt": "Application initiated",
+    "channelCat": "online",
+    "failureReason": null,
+    "applicantNm": null,
+    "applicantEmail": null,
+    "bankerNumId": null,
+    "appSubmitUserId": "RM",
+    "borrowerDetail": {
+        "customerUniqueId": null,
+        "personOrganizationCd": "O",
+        "ssnOrTinNum": "884884848",
+        "legalBusinessNm": "thomas",
+        "doingBusinessAsNm": "",
+        "birthDt": null,
+        "firstNm": null,
+        "lastNm": null,
+        "businessTitleId": null,
+        "legalStructureTypeId": 5,
+        "isNonProfitInd": null,
+        "naicsCd": "339950",
+        "annualPersonalIncomeAmt": null,
+        "annualRevenueAmt": 343443,
+        "annualProfitAmt": 3223,
+        "emailId": "dd@gmail.com",
+        "websiteAddressId": null,
+        "formationDt": "2020-11-11",
+        "establishmentStateCd": "AL",
+        "customerAddressList": [
+            {
+                "customerAddressTypeId": 1,
+                "cityNm": "HERNDON",
+                "line1Txt": "2300 DULLES CORNER BLVD",
+                "zipCd": "20171",
+                "phoneNum": null,
+                "stateCd": "VA"
+            },
+            {
+                "customerAddressTypeId": 2,
+                "cityNm": "HERNDON",
+                "line1Txt": "2300 DULLES CORNER BLVD",
+                "zipCd": "20171",
+                "phoneNum": null,
+                "stateCd": "VA"
+            }
+        ],
+        "kycDetailsLst": [
+            {
+                "techCustomerInfoPromptId": 1,
+                "responseTxt": "No"
+            }
+        ]
+    },
+    "ownerDetailsLst": [
+        {
+            "relationshipTypeId": 2,
+            "ownershipPct": 88,
+            "ownershipStatus": null,
+            "establishmentStateCd": null,
+            "ownerInfo": {
+                "customerUniqueId": null,
+                "personOrganizationCd": "P",
+                "ssnOrTinNum": "888893939",
+                "solePropSsnNum": null,
+                "legalBusinessNm": null,
+                "doingBusinessAsNm": null,
+                "birthDt": "1999-11-11",
+                "firstNm": "deepak",
+                "lastNm": "choudhary",
+                "businessTitleId": 3,
+                "legalStructureTypeId": null,
+                "isNonProfitInd": null,
+                "naicsCd": null,
+                "annualPersonalIncomeAmt": 3223,
+                "annualRevenueAmt": null,
+                "annualProfitAmt": null,
+                "emailId": "dd@gmail.com",
+                "websiteAddressId": null,
+                "formationDt": null,
+                "establishmentStateCd": null,
+                "customerAddressList": [
+                    {
+                        "customerAddressTypeId": 1,
+                        "cityNm": "ANNANDALE",
+                        "line1Txt": "3299 WOODBURN RD",
+                        "zipCd": "22003",
+                        "phoneNum": null,
+                        "stateCd": "VA"
+                    }
+                ],
+                "nraQuestion": {
+                    "isUsCitizen": true,
+                    "isLawfulPermanentResident": null,
+                    "uscisNumber": null,
+                    "expirationDateUscis": null
+                },
+                "kycDetailsLst": [
+                    {
+                        "techCustomerInfoPromptId": 1,
+                        "responseTxt": ""
+                    }
+                ]
+            },
+            "ownerDemographicDetails": {
+                "genderTypeId": 1,
+                "genderFreeformTxt": null,
+                "ethnicityDetailsLst": [
+                    {
+                        "ethnicityTypeId": 5,
+                        "ethnicitySubtypeId": 3,
+                        "ethnicityFreeformTxt": null
+                    },
+                    {
+                        "ethnicityTypeId": 2,
+                        "ethnicitySubtypeId": 2,
+                        "ethnicityFreeformTxt": null
+                    }
+                ],
+                "raceDetailsLst": [
+                    {
+                        "raceTypeId": 5,
+                        "raceSubtypeId": 3,
+                        "raceFreeformTxt": null
+                    },
+                    {
+                        "raceTypeId": 5,
+                        "raceSubtypeId": 3,
+                        "raceFreeformTxt": null
+                    }
+                ]
+            },
+            "customerIdentityDetailsLst": [
+                {
+                    "identityTypeId": "3",
+                    "identityNum": "3223",
+                    "issuedBy": "AL",
+                    "issuedDt": "2000-11-11",
+                    "expirationDt": "2026-11-11"
+                }
+            ]
+        }
+    ],
+    "appProductList": [
+        {
+            "productTypeCd": "2",
+            "productSubtypeCd": "168",
+            "loanPurposeTypeCd": "495",
+            "useOfFunds": null,
+            "requestedTermMon": "",
+            "newIncreaseId": 1,
+            "autopayInd": false,
+            "rewardsEarnedId": 0,
+            "lenderMatchReferralInd": "",
+            "accountNumber": "",
+            "routingNumber": "",
+            "deductedAmtId": null,
+            "requestedAmt": "",
+            "referredById": "",
+            "bankName": "",
+            "bankAddressLine1": "",
+            "bankAddressLine2": "",
+            "wireRoutingNumber": "",
+            "city": "",
+            "state": "",
+            "zipCode": "",
+            "additionalCardDetailsDTOLst": [],
+            "ownerProductLst": [
+                {
+                    "ssn": "888893939",
+                    "guaranteePct": 100,
+                    "relationshipTypeId": 2
+                }
+            ]
+        }
+    ],
+    "appRequestJson": "{\"routingReason\":\"\",\"applicationDataStr\":{\"products\":[{\"productTempId\":1,\"productType\":\"2\",\"productSubType1\":\"168\",\"productSubType2\":\"495\",\"productSubDescription\":null,\"useOfFunds\":null,\"amountRequested\":\"\",\"newIncreaseInd\":\"1\",\"isLenderMatchReferral\":\"\",\"termInMonths\":\"\",\"billingPreference\":null,\"lmIdentifier\":\"\",\"isExistingCustomer\":null,\"otherComments\":null,\"autopayRoutingNum\":\"\",\"rewardsType\":\"\",\"routingReason\":\"CFG Rule: Non-Profit Detected //\",\"businessNameOnCard\":\"deepak\",\"bankName\":\"\",\"bankAddressLine1\":\"\",\"bankAddressLine2\":\"\",\"wireRoutingNumber\":\"\",\"city\":\"\",\"state\":\"\",\"zipCode\":\"\"}],\"borrower\":{\"taxIdOrSsn\":\"884884848\",\"mgs\":0,\"legalName\":\"thomas\",\"firstName\":\"deepak\",\"middleName\":\"\",\"lastName\":\"choudhary\",\"dateOfBirth\":\"1999-11-11\",\"nonProfitInd\":\"2\",\"phoneNumber\":\"3223232323\",\"dbaName\":\"\",\"email\":\"dd@gmail.com\",\"doingBusinessSinceYear\":\"2020\",\"doingBusinessSinceMonth\":\"11\",\"stateOfIncorporation\":\"AL\",\"natureOfBusiness\":\"SIGN MANUFACTURING\",\"noOfEmployees\":32,\"businessNaicsCode\":\"339950\",\"businessNaicsDesc2\":\"\",\"annualRevenue\":343443,\"netIncome\":3223,\"personalIncome\":3223,\"dateOfLastTaxReturn\":\"2025-12-31\",\"netIncomeAsOfDate\":\"2025-12-31\",\"title\":3,\"legalStructure\":5,\"nameOfSigner\":\"\",\"physicalAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"2300 DULLES CORNER BLVD\",\"city\":\"HERNDON\",\"state\":\"VA\",\"zip\":\"20171\"},\"mailingAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"2300 DULLES CORNER BLVD\",\"city\":\"HERNDON\",\"state\":\"VA\",\"zip\":\"20171\"},\"customerKyc\":[{\"kycType\":\"1\",\"kycResponse\":\"N\"}],\"website\":null,\"additionalProfileInformation\":[{\"customerInfoCategoryId\":\"46\",\"promptList\":[{\"commentTxt\":\"\",\"customerInfoPromptId\":\"395\",\"checkInd\":false}]}],\"nraCustomerInd\":true},\"guarantors\":[{\"cardRequired\":null,\"affiliateType\":\"P\",\"relationshipType\":2,\"taxIdOrSsn\":\"888893939\",\"firstName\":\"deepak\",\"title\":3,\"middleName\":\"\",\"lastName\":\"choudhary\",\"dateOfBirth\":\"1999-11-11\",\"phoneNumber\":\"3030230202\",\"email\":\"dd@gmail.com\",\"personalIncome\":3223,\"ownershipPercentage\":88,\"physicalAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"3299 WOODBURN RD\",\"city\":\"ANNANDALE\",\"state\":\"VA\",\"zip\":\"22003\"},\"nraQuestion\":{\"isUsCitizen\":true,\"isLawfulPermanentResident\":null,\"uscisNumber\":null,\"expirationDateUscis\":null},\"felony\":false,\"mailingAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"3299 WOODBURN RD\",\"city\":\"ANNANDALE\",\"state\":\"VA\",\"zip\":\"22003\"},\"customerIdentificationDetails\":[{\"identificationType\":\"3\",\"identificationNumber\":\"3223\",\"stateOfIssue\":\"AL\",\"issueDate\":\"2000-11-11\",\"expirationDate\":\"2026-11-11\"}],\"ownerProductsLits\":[{\"productTempId\":1,\"guaranteePercentage\":100}],\"additionalProfileInformation\":[{\"customerInfoCategoryId\":\"46\",\"promptList\":[{\"commentTxt\":\"\",\"customerInfoPromptId\":\"396\",\"checkInd\":false}]}]}],\"custDemographInfo\":[],\"originatorId\":\"N119174\",\"branchNum\":\"\",\"bankNum\":\"\"},\"referenceNo\":null,\"requestTime\":\"2024-12-02 18:40:38 EST\",\"originator\":\"VST\",\"originatorKey\":null,\"serviceType\":\"CREATE_APPLN\"}",
+    "appReviewJson": "{\"applicationDataStr\":{\"products\":null,\"borrower\":{\"textrender\":{},\"generalInformation\":{\"businessNaicsCodeandDesc\":{\"id\":\"included\",\"label\":\"339950 - SIGN MANUFACTURING\",\"value\":\"339950 - SIGN MANUFACTURING\"},\"empty\":\"\",\"legalBusinessName\":\"thomas\",\"dbaNameQuestion\":false,\"taxIdTin\":\"88-4884848\"},\"businessInformation\":{\"businessPhone\":\"3223232323\",\"businessEmailAddress\":\"dd@gmail.com\",\"businessWebsiteAddress\":null,\"dateOfIncorporation\":\"2020-11-10T18:30:00.000Z\",\"stateOfIncorporation\":\"AL\",\"noOfEmployees\":32,\"annualProfit\":3223,\"annualRevenue\":343443},\"businessAddress\":{\"addressLine1\":\"2300 DULLES CORNER BLVD\",\"city\":\"HERNDON\",\"state\":\"VA\",\"zipCode\":\"20171\",\"zipCodeValidForState\":true},\"questionwithoutSection\":{\"useAboveBusinessAddress\":true}},\"guarantors\":{\"owners\":[{\"NRAQuestion\":{\"isNraForUs\":true,\"felcony\":false,\"isUsCitizen\":true},\"personalDetails\":{\"firstName\":\"deepak\",\"middleName\":\"\",\"lastName\":\"choudhary\",\"socialSecurityNumber\":\"888-89-3939\",\"personalMobileNumber\":\"(303) 023-0202\",\"emailId\":\"dd@gmail.com\",\"emailIdRecheck\":\"dd@gmail.com\",\"personalIncome\":3223},\"commonIDDetails\":{\"idType\":\"3\",\"dateofBirth\":\"1999-11-10T18:30:00.000Z\",\"idNumber\":\"3223\",\"issuedBy\":\"AL\",\"issueDate\":\"2000-11-10T18:30:00.000Z\",\"expiryDate\":\"2026-11-10T18:30:00.000Z\"},\"homeAddress\":{\"addressLine1\":\"3299 WOODBURN RD\",\"city\":\"ANNANDALE\",\"state\":\"VA\",\"zipCode\":\"22003\",\"zipCodeValidForState\":true},\"additionalDetails\":{\"businessRelationship\":\"Beneficial Owner and Significant Controller\",\"title\":\"President\",\"ownershipInTheBusiness\":\"88\"}}]},\"product\":[\"Business Platinum Credit Card\"]}}"
+}
