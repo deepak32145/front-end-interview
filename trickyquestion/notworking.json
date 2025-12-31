@@ -1,0 +1,169 @@
+{
+    "appStatusTxt": "Application initiated",
+    "channelCat": "online",
+    "failureReason": null,
+    "applicantNm": null,
+    "applicantEmail": null,
+    "bankerNumId": null,
+    "appSubmitUserId": null,
+    "borrowerDetail": {
+        "customerUniqueId": null,
+        "personOrganizationCd": null,
+        "ssnOrTinNum": "",
+        "legalBusinessNm": "AIOZTNUZXX AUTOMATION",
+        "doingBusinessAsNm": null,
+        "birthDt": "04-26-1969",
+        "firstNm": "SOPHIE",
+        "lastNm": "HALL",
+        "businessTitleId": null,
+        "legalStructureTypeId": null,
+        "isNonProfitInd": null,
+        "naicsCd": "ds",
+        "annualPersonalIncomeAmt": null,
+        "annualRevenueAmt": "5454",
+        "annualProfitAmt": "3443",
+        "emailId": "NX02600.Radhakrishnan@qaCITIZENSbank.com",
+        "websiteAddressId": null,
+        "formationDt": null,
+        "establishmentStateCd": null,
+        "customerAddressList": [
+            {
+                "customerAddressTypeId": 1,
+                "cityNm": "GLENMONT",
+                "line1Txt": "388 FEURA BUSH RD",
+                "zipCd": "12077",
+                "phoneNum": null,
+                "stateCd": "NEW YORK"
+            },
+            {
+                "customerAddressTypeId": 2,
+                "cityNm": "GLENMONT",
+                "line1Txt": "388 FEURA BUSH RD",
+                "zipCd": "12077",
+                "phoneNum": null,
+                "stateCd": "NEW YORK"
+            }
+        ],
+        "kycDetailsLst": [
+            {
+                "techCustomerInfoPromptId": null,
+                "responseTxt": null
+            }
+        ]
+    },
+    "ownerDetailsLst": [
+        {
+            "relationshipTypeId": null,
+            "ownershipPct": 100,
+            "ownershipStatus": null,
+            "establishmentStateCd": null,
+            "ownerInfo": {
+                "customerUniqueId": null,
+                "personOrganizationCd": null,
+                "ssnOrTinNum": "",
+                "solePropSsnNum": null,
+                "legalBusinessNm": null,
+                "doingBusinessAsNm": null,
+                "birthDt": "04-26-1969",
+                "firstNm": "SOPHIE",
+                "lastNm": "HALL",
+                "businessTitleId": null,
+                "legalStructureTypeId": null,
+                "isNonProfitInd": null,
+                "naicsCd": null,
+                "annualPersonalIncomeAmt": "$3,232",
+                "annualRevenueAmt": null,
+                "annualProfitAmt": null,
+                "emailId": null,
+                "websiteAddressId": null,
+                "formationDt": null,
+                "establishmentStateCd": null,
+                "customerAddressList": [
+                    {
+                        "customerAddressTypeId": 1,
+                        "cityNm": "SOME CITY",
+                        "line1Txt": "SOME PERSON ADDRESS",
+                        "zipCd": null,
+                        "phoneNum": null,
+                        "stateCd": "UNKNOWN"
+                    }
+                ],
+                "nraQuestion": {
+                    "isUsCitizen": null,
+                    "isLawfulPermanentResident": null,
+                    "uscisNumber": null,
+                    "expirationDateUscis": null
+                },
+                "kycDetailsLst": [
+                    {
+                        "techCustomerInfoPromptId": 1,
+                        "responseTxt": ""
+                    }
+                ]
+            },
+            "ownerDemographicDetails": {
+                "genderTypeId": 1,
+                "genderFreeformTxt": null,
+                "ethnicityDetailsLst": [
+                    {
+                        "ethnicityTypeId": 5,
+                        "ethnicitySubtypeId": 3,
+                        "ethnicityFreeformTxt": null
+                    }
+                ],
+                "raceDetailsLst": [
+                    {
+                        "raceTypeId": 5,
+                        "raceSubtypeId": 3,
+                        "raceFreeformTxt": null
+                    }
+                ]
+            },
+            "customerIdentityDetailsLst": [
+                {
+                    "identityTypeId": "",
+                    "identityNum": "YES",
+                    "issuedBy": "AL",
+                    "issuedDt": "12-12-2025",
+                    "expirationDt": "12-31-2025"
+                }
+            ]
+        }
+    ],
+    "appProductList": [
+        {
+            "productTypeCd": "2",
+            "productSubtypeCd": "168",
+            "loanPurposeTypeCd": "495",
+            "subChannelId": 3,
+            "useOfFunds": null,
+            "requestedTermMon": "",
+            "newIncreaseId": 1,
+            "autopayInd": false,
+            "rewardsEarnedId": 0,
+            "lenderMatchReferralInd": "",
+            "accountNumber": "",
+            "routingNumber": "",
+            "deductedAmtId": null,
+            "requestedAmt": "",
+            "referredById": "",
+            "bankName": "",
+            "bankAddressLine1": "",
+            "bankAddressLine2": "",
+            "wireRoutingNumber": "",
+            "city": "",
+            "state": "",
+            "zipCode": "",
+            "additionalCardDetailsDTOLst": [],
+            "ownerProductLst": [
+                {
+                    "ssn": "",
+                    "guaranteePct": 100,
+                    "relationshipTypeId": 2
+                }
+            ]
+        }
+    ],
+    "appRequestJson": "{\"routingReason\":\"\",\"applicationDataStr\":{\"products\":[{\"productTempId\":1,\"productType\":\"2\",\"productSubType1\":\"168\",\"subChannelId\":3,\"productSubType2\":\"495\",\"productSubDescription\":null,\"useOfFunds\":null,\"amountRequested\":null,\"newIncreaseInd\":\"1\",\"isLenderMatchReferral\":\"\",\"termInMonths\":\"\",\"billingPreference\":null,\"lmIdentifier\":\"\",\"isExistingCustomer\":null,\"otherComments\":null,\"autopayRoutingNum\":\"\",\"rewardsType\":\"\",\"routingReason\":null,\"businessNameOnCard\":null,\"bankName\":\"\",\"bankAddressLine1\":\"\",\"bankAddressLine2\":\"\",\"wireRoutingNumber\":\"\",\"city\":\"\",\"state\":\"\",\"zipCode\":\"\"}],\"borrower\":{\"taxIdOrSsn\":\"\",\"mgs\":null,\"legalName\":\"AIOZTNUZXX AUTOMATION\",\"firstName\":\"SOPHIE\",\"middleName\":null,\"lastName\":\"HALL\",\"dateOfBirth\":\"04-26-1969\",\"nonProfitInd\":null,\"phoneNumber\":\"555-299-2586\",\"dbaName\":null,\"email\":\"NX02600.Radhakrishnan@qaCITIZENSbank.com\",\"doingBusinessSinceYear\":\"\",\"doingBusinessSinceMonth\":\"\",\"stateOfIncorporation\":\"AZ\",\"natureOfBusiness\":\"\",\"noOfEmployees\":\"23\",\"businessNaicsCode\":\"ds\",\"businessNaicsDesc1\":\"\",\"businessNaicsDesc2\":\"\",\"annualRevenue\":\"5454\",\"netIncome\":\"3443\",\"personalIncome\":\"$3,232\",\"dateOfLastTaxReturn\":\"\",\"netIncomeAsOfDate\":\"\",\"title\":\"\",\"legalStructure\":\"\",\"nameOfSigner\":\"\",\"physicalAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"388 FEURA BUSH RD\",\"city\":\"GLENMONT\",\"state\":\"NEW YORK\",\"zip\":\"12077\"},\"mailingAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"388 FEURA BUSH RD\",\"city\":\"GLENMONT\",\"state\":\"NEW YORK\",\"zip\":\"12077\"},\"customerKyc\":[{\"kycType\":null,\"kycResponse\":null}],\"website\":null,\"additionalProfileInformation\":[{\"customerInfoCategoryId\":null,\"promptList\":[{\"commentTxt\":\"\",\"customerInfoPromptId\":\"\",\"checkInd\":null}]}],\"nraCustomerInd\":null},\"guarantors\":[{\"cardRequired\":null,\"affiliateType\":\"\",\"relationshipType\":null,\"taxIdOrSsn\":\"\",\"firstName\":\"SOPHIE\",\"title\":\"\",\"middleName\":\"\",\"lastName\":\"HALL\",\"dateOfBirth\":\"1969-04-26T00:00:00.000Z\",\"phoneNumber\":\"5559280494\",\"email\":null,\"personalIncome\":\"$3,232\",\"ownershipPercentage\":100,\"physicalAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"SOME PERSON ADDRESS\",\"city\":\"SOME CITY\",\"state\":\"UNKNOWN\",\"zip\":null},\"nraQuestion\":{\"isUsCitizen\":null,\"isLawfulPermanentResident\":null,\"uscisNumber\":null,\"expirationDateUscis\":null},\"felony\":false,\"mailingAddress\":{\"leaseOwned\":\"3\",\"addressLine1\":\"SOME PERSON ADDRESS\",\"city\":\"SOME CITY\",\"state\":\"UNKNOWN\",\"zip\":null},\"customerIdentificationDetails\":[{\"identificationType\":\"\",\"identificationNumber\":\"YES\",\"stateOfIssue\":\"AL\",\"issueDate\":\"12-12-2025\",\"expirationDate\":\"12-31-2025\"}],\"ownerProductsLits\":[{\"productTempId\":1,\"guaranteePercentage\":100}],\"additionalProfileInformation\":[{\"customerInfoCategoryId\":\"\",\"promptList\":[{\"commentTxt\":\"\",\"customerInfoPromptId\":\"\",\"checkInd\":null}]}]}],\"custDemographInfo\":[],\"originatorId\":\"\",\"branchNum\":\"\",\"bankNum\":\"\"},\"referenceNo\":null,\"requestTime\":\"2025-12-31T10:51:41.188Z\",\"originator\":\"\",\"originatorKey\":null,\"serviceType\":\"CREATE_APPLN\"}",
+    "appReviewJson": "{\"applicationDataStr\":{\"products\":null,\"borrower\":{\"textrender\":{},\"generalInformation\":{\"businessNaicsCodeandDesc\":{\"id\":\"\",\"label\":\"\",\"value\":\"\"},\"empty\":\"\",\"legalBusinessName\":\"AIOZTNUZXX AUTOMATION\",\"dbaNameQuestion\":null,\"taxIdTin\":\"\"},\"businessInformation\":{\"businessPhone\":\"555-299-2586\",\"businessEmailAddress\":\"NX02600.Radhakrishnan@qaCITIZENSbank.com\",\"businessWebsiteAddress\":\"\",\"dateOfIncorporation\":\"2025-12-13\",\"stateOfIncorporation\":\"AZ\",\"noOfEmployees\":\"23\",\"annualProfit\":\"3443\",\"annualRevenue\":\"5454\"},\"businessAddress\":{\"addressLine1\":\"388 FEURA BUSH RD\",\"city\":\"GLENMONT\",\"state\":\"NEW YORK\",\"zipCode\":\"12077\",\"zipCodeValidForState\":true},\"questionwithoutSection\":{\"useAboveBusinessAddress\":true}},\"guarantors\":{\"owners\":[{\"NRAQuestion\":{\"isNraForUs\":null,\"felcony\":null,\"isLawfulPermanentResident\":null,\"USCISNumber\":null,\"expirationDateUSCIS\":null,\"isUsCitizen\":null},\"personalDetails\":{\"firstName\":\"SOPHIE\",\"middleName\":\"\",\"lastName\":\"HALL\",\"socialSecurityNumber\":\"\",\"personalMobileNumber\":\"5559280494\",\"emailId\":null,\"personalIncome\":\"$3,232\"},\"commonIDDetails\":{\"idType\":\"\",\"dateofBirth\":\"04-26-1969\",\"idNumber\":\"YES\",\"issuedBy\":\"AL\",\"issueDate\":\"12-12-2025\",\"expiryDate\":\"12-31-2025\"},\"homeAddress\":{\"addressLine1\":\"SOME PERSON ADDRESS\",\"city\":\"SOME CITY\",\"state\":\"UNKNOWN\",\"zipCode\":null,\"zipCodeValidForState\":true},\"additionalDetails\":{\"businessRelationship\":\"\",\"title\":\"\",\"ownershipInTheBusiness\":\"\"}}]},\"product\":[]}}"
+}
