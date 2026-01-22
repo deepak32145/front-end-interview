@@ -1,0 +1,10 @@
+Q1️⃣: “Briefly tell me about your current role and what kind of frontend problems you solve day to day.”
+
+Q2️⃣: “Explain semantic HTML. Why does it matter in modern web apps?”
+
+Q3️⃣: “How does the browser render HTML → pixels?”
+
+Q5️⃣: “How would you build a responsive layout today?”
+
+
+// 

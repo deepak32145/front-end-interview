@@ -72,4 +72,30 @@ console.log(a === b);
 
 const arr = [32, 45, 2, 1, 77, 11, 9, 12];
 
+// Sorting using REDUCE (most practical)
+const sortedWithReduce = arr.reduce((acc, num) => {
+  const index = acc.findIndex(item => item > num);
+  if (index === -1) {
+    acc.push(num);
+  } else {
+    acc.splice(index, 0, num);
+  }
+  return acc;
+}, []);
+
+console.log("Sorted with reduce:", sortedWithReduce);
+
+// Sorting using MAP + SORT (alternative approach)
+const sortedWithMap = arr.map(x => x).sort((a, b) => a - b);
+console.log("Sorted with map:", sortedWithMap);
+
+// Sorting using FILTER (by building array with multiple filter calls - less practical)
+const max = Math.max(...arr);
+const sortedWithFilter = [];
+for (let i = 0; i <= max; i++) {
+  const filtered = arr.filter(num => num === i);
+  sortedWithFilter.push(...filtered);
+}
+console.log("Sorted with filter:", sortedWithFilter);
+
 // console.log(arr.map((data) => data * 2));

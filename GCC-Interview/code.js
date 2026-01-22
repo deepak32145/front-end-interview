@@ -17,14 +17,13 @@
 
 // console.log(deepCopy3);
 
-// Using Object.assign()
-// const original = { name: "John", address: { city: "NYC" } };
-// const shallowCopy = Object.assign({}, original);
+const original = { name: "John", address: { city: "NYC" } };
+const newObj = Object.assign({}, original);
 
-// shallowCopy.name = "Jane"; // doesn't affect original
-// shallowCopy.address.city = "LA"; // DOES affect original!
+newObj.name = "Jane"; 
+newObj.address.city = "LA"; 
 
-// console.log(original.address.city); // "LA" - changed!
+console.log(original); 
 
 // // Using spread operator
 // const shallowCopy2 = { ...original };
@@ -58,12 +57,11 @@
 // const deepCopy3 = deepClone(original);
 
 
-const arr = [1, 2, 3, 4, 5];
-const update = arr.reduce((acc , val) =>{
-  acc.push({[val] : val});
-  return acc;
-}, []);
+// const arr = [1, 2, 3, 4, 5];
+// const update = arr.reduce((acc , val) =>{
+//   acc.push({[val] : val});
+//   return acc;
+// }, []);
 
-console.log(update);
+// console.log(update);
 
-// 2016 
