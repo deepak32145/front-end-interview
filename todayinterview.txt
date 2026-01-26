@@ -1,0 +1,72 @@
+/*
+ * ****************************
+ * Scenario: Search API with cancellation
+ * ****************************
+ */
+
+this.searchControl.valueChanges.pipe(
+  debounceTime(300),
+  distinctUntilChanged(),
+  switchMap(term => this.http.get(`/api/search?q=${term}`))
+).subscribe(results => {
+  this.results = results;
+});
+
+
+
+/*
+ * ****************************
+ * 🧠 Scenario 1: Login Button Click (Prevent Multiple Submits)
+ * ****************************
+ */
+
+this.loginClick$.pipe(
+  exhaustMap(() => this.authService.login(this.form.value))
+).subscribe();
+
+
+
+/*
+ * ****************************
+ *
+ * ****************************
+ */
+
+
+🧠 Scenario 2: Save Draft → Then Publish (Order Matters)
+
+ this.save$.pipe(
+  concatMap(draft => this.api.saveDraft(draft)),
+  concatMap(saved => this.api.publish(saved.id))
+).subscribe();
+
+
+🧠 Scenario 3: Load Dashboard Data in Parallel
+
+
+forkJoin({
+  profile: this.api.getProfile(),
+  notifications: this.api.getNotifications(),
+  settings: this.api.getSettings()
+}).subscribe(data => {
+  this.dashboard = data;
+});
+
+
+🧠 Scenario 4: Form with Username Availability Check
+
+
+this.usernameControl.valueChanges.pipe(
+  debounceTime(500),
+  distinctUntilChanged(),
+  switchMap(name => this.api.checkUsername(name))
+).subscribe();
+
+
+🧠 Scenario 6: Auto-Refresh Data Every 30 Seconds
+
+interval(30000).pipe(
+  startWith(0),
+  switchMap(() => this.api.getStatus()),
+  takeUntil(this.destroy$)
+).subscribe();

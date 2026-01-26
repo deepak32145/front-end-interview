@@ -45,24 +45,6 @@ const p = new Promise((resolve, reject) => {
   }, 5000);
 });
 
-const p1 = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    resolve("promise is resolved");
-  }, 10000);
-});
-
-const p2 = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    resolve("promise is resolved");
-  }, 5000);
-});
-
-const p3 = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    resolve("promise is resolved");
-  }, 15000);
-});
-
 async function getData() {
   const result = await p;
   console.log(result);
@@ -121,7 +103,6 @@ person.hello.apply(newName, ["hello"]);
 const newHello = person.hello.bind(newName, "hi");
 
 newHello();
-
 
 
 
