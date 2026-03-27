@@ -1,14 +1,7 @@
-const arr = [23,43,55,66,1,2];
+const original = { name: "John", address: { city: "NYC" } };
+const newObj = Object.assign({}, original);
 
-for(let i =0; i<arr.length; i++) {
-    let temp = 0;
-    for(let j= i; j<arr.length; j++) {
-        if(arr[i] > arr[j]) {
-            temp = arr[j];
-            arr[j] = arr[i];
-            arr[i] = temp;
-        }
-    }
-}
+newObj.name = "Jane"; 
+newObj.address.city = "LA"; 
 
-console.log(arr);
+console.log(original); 
