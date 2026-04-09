@@ -2320,3 +2320,1567 @@ EVALUATION CRITERIA:
 ✓ Clean API design
 ✓ Proper state management
 */
+
+
+// ============================================
+// QUESTION 26: WeakRef and FinalizationRegistry
+// ============================================
+/*
+QUESTION:
+What do WeakRef and FinalizationRegistry do?
+Build a cache that holds weak references and runs cleanup callbacks
+when entries are garbage-collected.
+
+TRICKY PART: When is a WeakRef's deref() return value undefined,
+and what guarantees (or doesn't) JS give you about timing?
+*/
+
+class WeakCache {
+  #registry = new FinalizationRegistry((key) => {
+    // Called AFTER the held value is GC'd — NOT guaranteed to run
+    // immediately or even at all during program lifetime
+    this.#map.delete(key);
+    console.log(`Cache entry "${key}" was garbage-collected`);
+  });
+
+  #map = new Map(); // key -> WeakRef<value>
+
+  set(key, value) {
+    // Register cleanup BEFORE storing so the token (key) outlives value
+    this.#registry.register(value, key, value);
+    this.#map.set(key, new WeakRef(value));
+  }
+
+  get(key) {
+    const ref = this.#map.get(key);
+    if (!ref) return undefined;
+    const value = ref.deref(); // undefined if already GC'd
+    if (value === undefined) {
+      this.#map.delete(key); // proactive cleanup
+    }
+    return value;
+  }
+
+  get size() {
+    return this.#map.size; // may be stale — GC is non-deterministic
+  }
+}
+
+/*
+EVALUATION CRITERIA:
+✓ Knows WeakRef doesn't prevent GC (unlike Map / WeakMap)
+✓ Understands deref() can return undefined at any point after creation
+✓ FinalizationRegistry callback timing is non-deterministic
+✓ Passes unregister token to allow manual unregistration
+✓ Avoids using WeakRef for security or correctness guarantees
+✓ Understands this differs from WeakMap (which can't be iterated)
+*/
+
+
+// ============================================
+// QUESTION 27: Private Class Fields and Static Blocks
+// ============================================
+/*
+QUESTION:
+What is the difference between a TypeScript private modifier and a
+JS private field (#)? Implement a class using private fields, static
+private fields, private methods, and a static initialisation block.
+
+TRICKY PART: Can a subclass access a parent's # field?
+*/
+
+class IdGenerator {
+  static #counter;   // private static field
+
+  // Static block runs once when the class is evaluated,
+  // before any instance is created — ideal for async-free setup
+  static {
+    IdGenerator.#counter = Number(localStorage?.getItem('id') ?? 0);
+  }
+
+  #id; // private instance field — truly private, not on prototype
+
+  constructor(prefix = '') {
+    this.#id = `${prefix}${++IdGenerator.#counter}`;
+  }
+
+  getId() {
+    return this.#id;
+  }
+
+  // Private method — cannot be overridden or called externally
+  #validate() {
+    return this.#id.length > 0;
+  }
+
+  toString() {
+    return this.#validate() ? this.#id : '(invalid)';
+  }
+}
+
+// class Child extends IdGenerator {
+//   test() { return this.#id; } // SyntaxError — # fields are NOT inherited
+// }
+
+/*
+EVALUATION CRITERIA:
+✓ # fields live on the instance, not the prototype → no prototype pollution
+✓ Subclasses CANNOT access parent # fields — hard error at parse time
+✓ TypeScript `private` is erased at runtime — accessible via (obj as any).x
+✓ Static blocks execute once at class evaluation, top-to-bottom
+✓ Can use static blocks for logic that needs access to private statics
+✓ Private methods can't be extracted and called independently
+*/
+
+
+// ============================================
+// QUESTION 28: Async Generators and for-await-of
+// ============================================
+/*
+QUESTION:
+Implement a paginated API fetcher using an async generator so callers
+can consume pages lazily with for-await-of, with support for early
+termination (break).
+
+TRICKY PART: What happens to the generator when the caller breaks early?
+*/
+
+async function* paginatedFetch(url, pageSize = 20) {
+  let cursor = null;
+  let page = 0;
+
+  try {
+    while (true) {
+      const endpoint = cursor
+        ? `${url}?cursor=${cursor}&limit=${pageSize}`
+        : `${url}?limit=${pageSize}`;
+
+      const res = await fetch(endpoint);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const { items, nextCursor } = await res.json();
+      yield items; // pause here — caller controls when to ask for next page
+
+      if (!nextCursor) break;
+      cursor = nextCursor;
+      page++;
+    }
+  } finally {
+    // finally runs whether the loop completes normally OR the caller breaks
+    console.log(`Fetched ${page + 1} pages total`);
+  }
+}
+
+// Consumer
+async function loadFirst100(url) {
+  const results = [];
+  for await (const page of paginatedFetch(url)) {
+    results.push(...page);
+    if (results.length >= 100) break; // triggers generator.return() internally
+  }
+  return results;
+}
+
+/*
+EVALUATION CRITERIA:
+✓ Async generator syntax: async function*
+✓ yield suspends until consumer calls next()
+✓ for-await-of calls generator.return() on break → triggers finally
+✓ try/finally guarantees cleanup even on early termination
+✓ Lazy evaluation — only fetches next page when needed
+✓ Handles cursor-based pagination correctly
+*/
+
+
+// ============================================
+// QUESTION 29: AbortController and Fetch Cancellation
+// ============================================
+/*
+QUESTION:
+Build a fetchWithTimeout utility that cancels a fetch after N ms.
+Then extend it to support caller-provided AbortSignals (so the caller
+can cancel independently).
+
+TRICKY PART: How do you compose two AbortSignals (timeout + external)?
+*/
+
+function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+  const { signal: callerSignal, ...rest } = options;
+
+  // AbortSignal.any() (ES2024) combines signals — aborts when ANY fires
+  // Polyfill for older environments: use AbortController + event listener
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(
+    () => timeoutController.abort(new DOMException('Timeout', 'TimeoutError')),
+    timeoutMs
+  );
+
+  const signals = [timeoutController.signal];
+  if (callerSignal) signals.push(callerSignal);
+
+  // AbortSignal.any is the cleanest composition mechanism
+  const combinedSignal = AbortSignal.any
+    ? AbortSignal.any(signals)
+    : timeoutController.signal; // fallback
+
+  return fetch(url, { ...rest, signal: combinedSignal }).finally(() =>
+    clearTimeout(timeoutId)
+  );
+}
+
+// Usage
+const controller = new AbortController();
+fetchWithTimeout('/api/data', { signal: controller.signal }, 3000)
+  .then(r => r.json())
+  .catch(err => {
+    if (err.name === 'AbortError') console.log('Cancelled or timed out');
+    else throw err;
+  });
+
+/*
+EVALUATION CRITERIA:
+✓ AbortController/AbortSignal are the standard cancellation primitive
+✓ clearTimeout in finally to avoid timer leaks
+✓ Composing signals with AbortSignal.any (or manual listener approach)
+✓ Distinguishes TimeoutError vs user-initiated AbortError
+✓ signal passed to fetch is how the browser cancels in-flight XHR
+✓ Works with any fetch-based library (not fetch-specific)
+*/
+
+
+// ============================================
+// QUESTION 30: Structured Clone vs JSON Serialisation
+// ============================================
+/*
+QUESTION:
+What does structuredClone() support that JSON.parse(JSON.stringify())
+does NOT? Identify the output of the following:
+
+const a = { d: new Date(), m: new Map([[1,2]]), r: /abc/g };
+const b = JSON.parse(JSON.stringify(a));
+const c = structuredClone(a);
+
+console.log(typeof b.d, b.m, b.r);
+console.log(c.d instanceof Date, c.m instanceof Map, c.r instanceof RegExp);
+*/
+
+// ANSWER — output:
+// "string"   {}   {}     ← JSON loses Date (→ string), Map (→ {}), RegExp (→ {})
+// true  true  true       ← structuredClone preserves all three
+
+// What structuredClone supports that JSON does NOT:
+//   Date, Map, Set, RegExp, ArrayBuffer, TypedArrays, Blob (some envs),
+//   circular references, Error objects (limited), undefined values
+
+// What structuredClone CANNOT clone:
+//   Functions, DOM nodes, class instances with prototype methods,
+//   WeakMap/WeakSet, Symbol-keyed properties
+
+function deepClone(value) {
+  // Best-practice deep clone that falls back gracefully
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value);
+  }
+  // Fallback — loses special types
+  return JSON.parse(JSON.stringify(value));
+}
+
+// Circular reference — JSON throws, structuredClone handles it
+const obj = { a: 1 };
+obj.self = obj;
+const cloned = structuredClone(obj); // works
+// JSON.stringify(obj); // TypeError: cyclic object value
+
+/*
+EVALUATION CRITERIA:
+✓ Knows JSON limitations: Date→string, Map/Set→{}, undefined removed
+✓ structuredClone handles cycles, typed arrays, Maps, Sets, Dates, RegExp
+✓ structuredClone cannot clone functions — they are not "structured data"
+✓ Class prototype methods are lost — only own enumerable data is cloned
+✓ Knows structuredClone is synchronous and throws on non-cloneable input
+*/
+
+
+// ============================================
+// QUESTION 31: Logical Assignment Operators
+// ============================================
+/*
+QUESTION:
+Predict the output. Explain the short-circuit difference between
+||=, &&=, and ??=. When does each NOT perform the assignment?
+*/
+
+{
+  let a = 0, b = 1, c = null, d = undefined, e = false;
+
+  a ||= 99;   // a is falsy  → assigns  → a = 99
+  b ||= 99;   // b is truthy → skips    → b = 1
+  c ??= 42;   // c is null   → assigns  → c = 42
+  d ??= 42;   // d is undefined → assigns → d = 42
+  e ??= 42;   // e is false (not null/undefined) → skips → e = false
+  b &&= 100;  // b is truthy → assigns  → b = 100
+  a &&= 0;    // a is truthy (99) → assigns → a = 0 (re-assigns to falsy!)
+
+  console.log(a, b, c, d, e); // 0  100  42  42  false
+}
+
+// KEY TRICKY PART: &&= assigns the RHS even if RHS is falsy
+// The guard is "is LHS truthy?" not "is RHS truthy?"
+
+// Practical use: default config with ??=
+function initConfig(config = {}) {
+  config.timeout ??= 5000;
+  config.retries ??= 3;
+  config.debug ??= false; // false is a valid value — ??= respects that
+  return config;
+}
+
+/*
+EVALUATION CRITERIA:
+✓ ||= short-circuits on truthy LHS (like || itself)
+✓ &&= short-circuits on falsy LHS
+✓ ??= short-circuits on non-nullish LHS (0, false, '' are NOT nullish)
+✓ Assignment only happens when the logical check would pass
+✓ Practical: ??= is safer than ||= for defaults (doesn't clobber 0/''/false)
+*/
+
+
+// ============================================
+// QUESTION 32: Promise.any and AggregateError
+// ============================================
+/*
+QUESTION:
+Explain Promise.any vs Promise.race vs Promise.allSettled vs Promise.all.
+Write a "first healthy endpoint" function that tries 3 CDN URLs and
+returns the first successful response, but throws if ALL fail.
+*/
+
+async function fetchFromFastest(urls) {
+  // Promise.any — resolves with FIRST fulfilled, rejects only if ALL reject
+  // Promise.race — settles with FIRST settled (fulfilled OR rejected)
+  return Promise.any(
+    urls.map(url =>
+      fetch(url).then(res => {
+        if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`);
+        return res;
+      })
+    )
+  ).catch(err => {
+    // AggregateError.errors is an array of each individual rejection reason
+    if (err instanceof AggregateError) {
+      console.error('All CDNs failed:', err.errors);
+    }
+    throw err;
+  });
+}
+
+/*
+Comparison table:
+┌───────────────────┬────────────────────────────────────────────────────┐
+│ Promise.all       │ Rejects immediately on FIRST rejection              │
+│ Promise.allSettled│ Always resolves with array of {status,value/reason} │
+│ Promise.race      │ Settles (resolve OR reject) with FIRST settled      │
+│ Promise.any       │ Resolves with FIRST fulfillment; AggregateError if  │
+│                   │ ALL reject                                           │
+└───────────────────┴────────────────────────────────────────────────────┘
+
+EVALUATION CRITERIA:
+✓ Promise.any ignores rejections until all have rejected
+✓ AggregateError.errors preserves every rejection in order
+✓ Promise.race rejects fast if fastest promise rejects — often a footgun
+✓ Promise.allSettled never rejects — use when you need all outcomes
+✓ Knows the order of resolution in Promise.any is not guaranteed
+*/
+
+
+// ============================================
+// QUESTION 33: The Microtask Queue — Deep Dive
+// ============================================
+/*
+QUESTION:
+Predict the exact console output order:
+*/
+
+console.log('1');
+
+setTimeout(() => console.log('2'), 0);  // macrotask
+
+Promise.resolve()
+  .then(() => console.log('3'))         // microtask 1
+  .then(() => console.log('4'));        // microtask 2 (queued after 3 runs)
+
+queueMicrotask(() => console.log('5')); // microtask 3
+
+Promise.resolve().then(() => {
+  console.log('6');
+  setTimeout(() => console.log('7'), 0); // macrotask queued from microtask
+});
+
+console.log('8');
+
+// OUTPUT: 1, 8, 3, 5, 6, 4, 2, 7
+// WHY:
+// Sync: 1, 8
+// Microtask drain (all before next macrotask):
+//   Queue after sync: [then→3, queueMicrotask→5, then→6]
+//   Run 3 → queues then→4.  Queue: [5, 6, 4]
+//   Run 5.                  Queue: [6, 4]
+//   Run 6 → queues setTimeout→7 in macrotask queue.  Queue: [4]
+//   Run 4.                  Queue: []
+// Macrotask: 2  (first setTimeout)
+// Macrotask: 7  (second setTimeout, queued by microtask 6)
+
+/*
+EVALUATION CRITERIA:
+✓ Microtasks (Promise.then, queueMicrotask, MutationObserver) drain fully
+  before the next macrotask runs
+✓ Each .then() chains a NEW microtask — not queued at parse time
+✓ setTimeout/setInterval are macrotasks (task queue)
+✓ queueMicrotask is equivalent in timing to Promise.resolve().then()
+✓ Macrotasks inside microtasks run AFTER the current microtask drain
+*/
+
+
+// ============================================
+// QUESTION 34: Tagged Template Literals
+// ============================================
+/*
+QUESTION:
+Implement a sql tagged template that sanitises interpolated values
+to prevent SQL injection. Also implement a highlight tag that wraps
+interpolated values in <mark> tags.
+*/
+
+function sql(strings, ...values) {
+  // strings: array of raw string parts (always length = values.length + 1)
+  // values:  the interpolated expressions
+  let query = '';
+  const params = [];
+
+  strings.forEach((str, i) => {
+    query += str;
+    if (i < values.length) {
+      query += `$${i + 1}`; // parameterised placeholder
+      params.push(values[i]);
+    }
+  });
+
+  return { query, params };
+}
+
+{
+  const userId = "1; DROP TABLE users; --";
+  const { query, params } = sql`SELECT * FROM users WHERE id = ${userId}`;
+  // query:  "SELECT * FROM users WHERE id = $1"
+  // params: ["1; DROP TABLE users; --"]   ← safely passed as parameter
+  console.log(query, params);
+}
+
+function highlight(strings, ...values) {
+  return strings.reduce((result, str, i) =>
+    result + str + (values[i] !== undefined ? `<mark>${values[i]}</mark>` : ''),
+    ''
+  );
+}
+
+{
+  const tagName = 'Alice';
+  const score = 95;
+  console.log(highlight`Name: ${tagName}, Score: ${score}`);
+}
+// "Name: <mark>Alice</mark>, Score: <mark>95</mark>"
+
+/*
+EVALUATION CRITERIA:
+✓ strings.length === values.length + 1 — always one more string chunk
+✓ Tag receives raw string array as first arg, rest are interpolated values
+✓ strings.raw preserves escape sequences (useful for regex/SQL literals)
+✓ Real-world use: sanitisation, i18n, styled-components, GraphQL gql tag
+✓ Does NOT call toString() on values automatically — full control
+*/
+
+
+// ============================================
+// QUESTION 35: Well-Known Symbols
+// ============================================
+/*
+QUESTION:
+Override Symbol.toPrimitive, Symbol.iterator, Symbol.hasInstance,
+and Symbol.toStringTag on a custom class. Predict the output of
+each operation.
+*/
+
+class Temperature {
+  constructor(celsius) {
+    this.celsius = celsius;
+  }
+
+  // Controls how the object coerces to primitives
+  [Symbol.toPrimitive](hint) {
+    if (hint === 'number') return this.celsius;
+    if (hint === 'string') return `${this.celsius}°C`;
+    return this.celsius; // 'default' hint (e.g., +obj, obj == 5)
+  }
+
+  // Makes class iterable — yields fahrenheit, celsius, kelvin
+  *[Symbol.iterator]() {
+    yield this.celsius * 9 / 5 + 32; // fahrenheit
+    yield this.celsius;               // celsius
+    yield this.celsius + 273.15;      // kelvin
+  }
+
+  // Overrides Object.prototype.toString tag
+  get [Symbol.toStringTag]() {
+    return 'Temperature';
+  }
+
+  // Controls instanceof behaviour
+  static [Symbol.hasInstance](instance) {
+    return typeof instance?.celsius === 'number';
+  }
+}
+
+const t = new Temperature(100);
+console.log(+t);                          // 100   (number hint)
+console.log(`${t}`);                      // "100°C" (string hint)
+console.log([...t]);                      // [212, 100, 373.15]
+console.log(Object.prototype.toString.call(t)); // "[object Temperature]"
+console.log({ celsius: 37 } instanceof Temperature); // true (hasInstance)
+
+/*
+EVALUATION CRITERIA:
+✓ Symbol.toPrimitive overrides valueOf + toString with hint context
+✓ Generator syntax for Symbol.iterator allows spread/for-of
+✓ Symbol.toStringTag affects Object.prototype.toString (not console.log)
+✓ Symbol.hasInstance lets any object pretend to be an instance
+✓ Well-known symbols are on Symbol — not created by Symbol()
+*/
+
+
+// ============================================
+// QUESTION 36: Proxy — All Fundamental Traps
+// ============================================
+/*
+QUESTION:
+Build a deeply-observable object using Proxy. Any get/set/delete on
+nested objects should also be intercepted. Identify which traps fire for:
+  obj.a = 1        → set
+  delete obj.a     → deleteProperty
+  'a' in obj       → has
+  Object.keys(obj) → ownKeys + getOwnPropertyDescriptor
+  new MyClass()    → construct (on function proxies)
+*/
+
+function createObservable(target, onChange) {
+  const handler = {
+    get(t, prop, receiver) {
+      const value = Reflect.get(t, prop, receiver);
+      // Wrap nested objects lazily so deep mutations are also intercepted
+      if (value !== null && typeof value === 'object') {
+        return createObservable(value, onChange);
+      }
+      return value;
+    },
+    set(t, prop, value, receiver) {
+      const old = t[prop];
+      const result = Reflect.set(t, prop, value, receiver);
+      if (old !== value) onChange({ type: 'set', prop, old, value });
+      return result; // MUST return true or strict mode throws TypeError
+    },
+    deleteProperty(t, prop) {
+      const had = prop in t;
+      const result = Reflect.deleteProperty(t, prop);
+      if (had) onChange({ type: 'delete', prop });
+      return result;
+    },
+    has(t, prop) {
+      onChange({ type: 'has', prop });
+      return Reflect.has(t, prop);
+    },
+  };
+  return new Proxy(target, handler);
+}
+
+const state = createObservable({ user: { name: 'Alice' } }, console.log);
+state.user.name = 'Bob';   // fires set on nested proxy
+delete state.user;         // fires deleteProperty
+
+/*
+EVALUATION CRITERIA:
+✓ Reflect mirrors Proxy traps exactly — always delegate to Reflect
+✓ set trap MUST return boolean; returning false in strict mode throws
+✓ Wrapping nested values in new Proxy enables deep observation
+✓ Proxy !== target — identity checks (===) can break if not careful
+✓ ownKeys trap must include non-enumerable and symbol keys for correctness
+✓ Knows construct trap applies to function proxies (new handler)
+*/
+
+
+// ============================================
+// QUESTION 37: Memory Leak Patterns
+// ============================================
+/*
+QUESTION:
+Identify and fix 4 classic memory leak patterns in browser JavaScript.
+*/
+
+// LEAK 1: Detached DOM nodes still referenced by a closure
+function attachListener() {
+  const button = document.getElementById('btn');
+  const bigData = new Array(100000).fill('*');
+
+  button.addEventListener('click', () => {
+    console.log(bigData.length); // closure holds bigData AND button
+  });
+
+  // FIX: Remove listener when no longer needed, or use { once: true }
+  // button.addEventListener('click', handler, { once: true });
+}
+
+// LEAK 2: Growing event listener list on a long-lived target
+class EventBus {
+  #handlers = new Map();
+
+  on(event, handler) {
+    if (!this.#handlers.has(event)) this.#handlers.set(event, new Set());
+    this.#handlers.get(event).add(handler);
+    // FIX: Return unsubscribe function — callers MUST call it on destroy
+    return () => this.#handlers.get(event)?.delete(handler);
+  }
+}
+
+// LEAK 3: Interval that captures a large object
+function startPolling(service) {
+  const cache = new Map(); // never freed while interval runs
+  const id = setInterval(() => {
+    service.poll().then(data => cache.set(Date.now(), data));
+  }, 1000);
+  // FIX: return a stop function; call clearInterval + cache.clear()
+  return () => { clearInterval(id); cache.clear(); };
+}
+
+// LEAK 4: Global variable accumulation
+function processRequests(requests) {
+  // BAD: implicit global (missing let/const/var in sloppy mode)
+  // result = requests.map(transform); // leaks to window.result
+  // FIX:
+  const result = requests.map(r => r);
+  return result;
+}
+
+/*
+EVALUATION CRITERIA:
+✓ Detached DOM nodes: event listeners keep closure + node in memory
+✓ Event buses / pub-sub: always provide unsubscribe; WeakRef can help
+✓ setInterval without clearInterval — even after component unmount
+✓ Accidental globals: always use strict mode / lint rules
+✓ Circular references (less relevant post-mark-and-sweep but still poor practice)
+✓ Can use Chrome DevTools Memory tab / heap snapshots to verify
+*/
+
+
+// ============================================
+// QUESTION 38: Atomics and SharedArrayBuffer
+// ============================================
+/*
+QUESTION:
+Why do we need Atomics when using SharedArrayBuffer across workers?
+Implement a lock-free counter that two workers can increment safely.
+What is a data race and how does Atomics.add prevent it?
+*/
+
+// main.js
+const sab = new SharedArrayBuffer(4); // 4 bytes = 1 Int32
+const counter = new Int32Array(sab);
+
+const worker = new Worker('worker.js');
+worker.postMessage({ sab }); // transfer by reference — no copy
+
+// worker.js (would be a separate file)
+// self.onmessage = ({ data: { sab } }) => {
+//   const counter = new Int32Array(sab);
+//   for (let i = 0; i < 1_000_000; i++) {
+//     Atomics.add(counter, 0, 1); // atomic increment — no race condition
+//     // counter[0]++ would be: READ → ADD → WRITE (non-atomic — race!)
+//   }
+// };
+
+// Mutex using Atomics.wait / Atomics.notify (only valid in Workers)
+// Atomics.wait(int32, index, expectedValue) — blocks if value === expected
+// Atomics.notify(int32, index, count)       — wakes waiting agents
+
+/*
+EVALUATION CRITERIA:
+✓ SharedArrayBuffer shares memory between threads (unlike postMessage copy)
+✓ Non-atomic read-modify-write creates data races with multiple writers
+✓ Atomics.add / Atomics.compareExchange are guaranteed atomic operations
+✓ Atomics.wait can ONLY be called in Workers (blocks main thread → deadlock)
+✓ COOP/COEP headers required to enable SharedArrayBuffer (site isolation)
+✓ Knows Spectre mitigation is why SAB was disabled and later re-enabled
+*/
+
+
+// ============================================
+// QUESTION 39: Intl API — Locale-Aware Formatting
+// ============================================
+/*
+QUESTION:
+Format a price, a date, and a list using the Intl API for both
+en-US and hi-IN locales. What native JS methods should you NEVER
+use for locale-sensitive display?
+*/
+
+{
+  const amount = 1234567.89;
+  const date = new Date('2024-01-15');
+  const items = ['apples', 'oranges', 'mangoes'];
+
+  // Currency
+  const usdFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+  const inrFormatter = new Intl.NumberFormat('hi-IN', { style: 'currency', currency: 'INR' });
+  console.log(usdFormatter.format(amount)); // "$1,234,567.89"
+  console.log(inrFormatter.format(amount)); // "₹12,34,567.89" (Indian grouping)
+
+  // Date
+  const usDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'long' });
+  const inDate = new Intl.DateTimeFormat('hi-IN', { dateStyle: 'long' });
+  console.log(usDate.format(date)); // "January 15, 2024"
+  console.log(inDate.format(date)); // "15 जनवरी 2024"
+
+  // List
+  const listFmt = new Intl.ListFormat('en-US', { style: 'long', type: 'conjunction' });
+  console.log(listFmt.format(items)); // "apples, oranges, and mangoes"
+}
+
+// Collation (locale-aware sorting)
+const words = ['banana', 'Äpfel', 'cherry'];
+words.sort(new Intl.Collator('de').compare);
+
+// NEVER USE for display: toLocaleDateString() without locale arg,
+// Number.toLocaleString() without locale, String.localeCompare() without options
+
+/*
+EVALUATION CRITERIA:
+✓ Intl.NumberFormat caches formatter — expensive to construct, cheap to reuse
+✓ Indian number system uses 2-digit grouping after first 3 digits
+✓ Intl.DateTimeFormat vs Date.toLocaleDateString — same engine, explicit locale better
+✓ Intl.Collator for sorting locale-aware strings (handles diacritics)
+✓ Intl.RelativeTimeFormat for "2 hours ago" style strings
+✓ Knows to avoid host-default locale — always pass explicit locale
+*/
+
+
+// ============================================
+// QUESTION 40: Advanced RegExp Features
+// ============================================
+/*
+QUESTION:
+Use named capture groups, lookbehind assertions, and the 'd' flag
+(indices) to parse a date string. Explain the difference between
+sticky (y) and global (g) flags, and why exec() in a loop on a
+global regex has a footgun.
+*/
+
+{
+  // Named capture groups
+  const dateRe = /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/d;
+  const match = dateRe.exec('Event on 2024-01-15, more text');
+  if (match) {
+    console.log(match.groups);         // { year: '2024', month: '01', day: '15' }
+    console.log(match.indices.groups); // { year: [9,13], month: [14,16], day: [17,19] }
+  }
+
+  // Lookbehind assertion (ES2018)
+  const prices = '€10 $20 £30';
+  const usdOnly = /(?<=\$)\d+/g;
+  console.log(prices.match(usdOnly)); // ['20'] — only after $
+
+  // Global flag footgun: regex.lastIndex persists between exec() calls
+  const globalRe = /\d+/g;
+  const str = 'a1 b2 c3';
+  let m;
+  while ((m = globalRe.exec(str)) !== null) {
+    console.log(m[0], 'at', m.index); // 1, 2, 3
+  }
+}
+// If you reuse globalRe without resetting lastIndex, second loop starts mid-string!
+// FIX: reset globalRe.lastIndex = 0; or create a new RegExp each time
+
+// Sticky flag 'y' — must match at lastIndex exactly (no skip)
+const stickyRe = /\d+/y;
+stickyRe.lastIndex = 3;
+console.log(stickyRe.exec('abc123')); // ['123'] — matches at index 3
+stickyRe.lastIndex = 0;
+console.log(stickyRe.exec('abc123')); // null — no digit at index 0
+
+/*
+EVALUATION CRITERIA:
+✓ Named capture groups via ?<name> and match.groups
+✓ 'd' flag provides .indices with [start, end] for each group
+✓ Lookbehind (?<=...) and negative lookbehind (?<!...)
+✓ Global regex.lastIndex footgun when reusing across calls
+✓ Sticky differs from global: y requires match at EXACT lastIndex
+✓ String.matchAll() is safer than while+exec for global iteration
+*/
+
+
+// ============================================
+// QUESTION 41: Object.groupBy and Array Grouping
+// ============================================
+/*
+QUESTION:
+Use Object.groupBy (ES2024) and Map.groupBy to group an array of
+transactions by category. What is the key difference between the two?
+*/
+
+const transactions = [
+  { id: 1, category: 'food',    amount: 20 },
+  { id: 2, category: 'travel',  amount: 200 },
+  { id: 3, category: 'food',    amount: 35 },
+  { id: 4, category: 'travel',  amount: 150 },
+  { id: 5, category: null,      amount: 5 },
+];
+
+// Object.groupBy — keys become plain object properties
+// null/undefined keys become the string "null"/"undefined"
+const byCategory = Object.groupBy(transactions, t => t.category ?? 'unknown');
+// { food: [...], travel: [...], unknown: [...] }
+
+// Map.groupBy — keys can be ANY value (including objects, null safely)
+const byAmount = Map.groupBy(transactions, t =>
+  t.amount < 50 ? 'small' : 'large'
+);
+// Map { 'small' => [...], 'large' => [...] }
+
+// Older equivalent using reduce:
+function groupBy(arr, keyFn) {
+  return arr.reduce((acc, item) => {
+    const key = String(keyFn(item));
+    (acc[key] ??= []).push(item);
+    return acc;
+  }, Object.create(null)); // null prototype avoids key conflicts with 'constructor' etc.
+}
+
+/*
+EVALUATION CRITERIA:
+✓ Object.groupBy uses string keys (null → "null") — same as object property rules
+✓ Map.groupBy supports any key type, including object references
+✓ Both return groups of references to original items (no clone)
+✓ Polyfill with reduce uses ??= for clean default-or-push
+✓ Object.create(null) avoids inherited keys like 'hasOwnProperty' polluting result
+✓ Neither method is stable-sorted by default — insertion order is kept
+*/
+
+
+// ============================================
+// QUESTION 42: Dynamic import() and Code Splitting
+// ============================================
+/*
+QUESTION:
+Explain how import() differs from require() and static import.
+Implement route-level code splitting with import() and show how
+to handle loading state, error boundaries, and module preloading.
+*/
+
+// Static import — synchronous, hoisted, resolved at module evaluation
+// import { Chart } from './chart'; // always bundled
+
+// Dynamic import — returns Promise<module>, deferred, can be conditional
+async function renderChart(containerId, data) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '<p>Loading chart...</p>';
+
+  try {
+    // Vite/webpack recognises the magic comment as a chunk name
+    const { Chart } = await import(/* webpackChunkName: "chart" */ './chart.js');
+    new Chart(container, data);
+  } catch (err) {
+    container.innerHTML = `<p>Failed to load chart: ${err.message}</p>`;
+  }
+}
+
+// Preloading — fetch module but don't execute yet
+function preloadModule(path) {
+  return import(path); // module is fetched and parsed, Promise cached
+}
+
+// On hover, preload heavy component
+document.getElementById('open-modal')?.addEventListener('mouseenter', () => {
+  preloadModule('./HeavyModal.js');
+});
+
+// Multiple imports in parallel
+async function loadAll() {
+  const [moduleA, moduleB] = await Promise.all([
+    import('./a.js'),
+    import('./b.js'),
+  ]);
+  return { ...moduleA, ...moduleB };
+}
+
+/*
+EVALUATION CRITERIA:
+✓ Dynamic import() is a language feature, not a function (can't store as variable)
+✓ Returns Promise<namespace object> — default export is .default
+✓ Bundlers (webpack/vite) create separate chunks from dynamic imports
+✓ Module cache: same URL = same Promise (import() is idempotent)
+✓ Preloading by calling import() without awaiting populates the module cache
+✓ Works in both ESM and CJS contexts (Node 14+)
+*/
+
+
+// ============================================
+// QUESTION 43: Symbols as Unique Keys
+// ============================================
+/*
+QUESTION:
+Explain Symbol.for() vs Symbol(). What is the global Symbol registry?
+Show a case where Symbol metadata keys survive JSON serialisation
+inadvertently and how to avoid it.
+*/
+
+// Symbol() — always unique, not in any registry
+const s1 = Symbol('tag');
+const s2 = Symbol('tag');
+console.log(s1 === s2); // false — different identities every time
+
+// Symbol.for() — registered globally, shared across realms (iframes, workers)
+const shared1 = Symbol.for('app.auth.token');
+const shared2 = Symbol.for('app.auth.token');
+console.log(shared1 === shared2); // true — same registry entry
+
+// Symbols are NOT included in JSON.stringify
+const obj = { name: 'Alice', [Symbol('secret')]: 'hidden' };
+console.log(JSON.stringify(obj)); // '{"name":"Alice"}' — Symbol key dropped
+
+// BUT: Object.assign copies Symbol keys!
+const copy = Object.assign({}, obj);
+console.log(Object.getOwnPropertySymbols(copy)); // [Symbol(secret)]
+
+// Unique symbol type: TypeScript has `unique symbol` for type-level branding
+// In JS: use Symbol() — each call always returns a unique value
+const uniqueSym = Symbol('brand'); // JS equivalent — never equal to any other Symbol()
+
+// Well-known vs user symbols: well-known are properties on Symbol object
+console.log(typeof Symbol.iterator); // "symbol" — but NOT in registry
+console.log(Symbol.keyFor(Symbol.iterator)); // undefined — not registered
+
+/*
+EVALUATION CRITERIA:
+✓ Symbol() uniqueness per call — cannot be recreated
+✓ Symbol.for() is cross-realm shared registry (important for iframes)
+✓ Symbol keys invisible to JSON / for...in / Object.keys
+✓ Object.assign, spread, Reflect.ownKeys DO copy symbol keys
+✓ Well-known symbols (Symbol.iterator etc.) are NOT in the registry
+✓ Symbol.keyFor() only finds symbols registered with Symbol.for()
+*/
+
+
+// ============================================
+// QUESTION 44: Iterable and Iterator Protocol
+// ============================================
+/*
+QUESTION:
+Implement a custom Range class that is both iterable AND an iterator.
+Then implement an infinite Fibonacci sequence as a generator.
+Explain the difference between iterable and iterator.
+*/
+
+// ITERABLE: has [Symbol.iterator]() returning an iterator
+// ITERATOR: has next() returning { value, done }
+// An object can be both (return this from [Symbol.iterator])
+
+class Range {
+  #current;
+  constructor(start, end, step = 1) {
+    this.start = start;
+    this.end = end;
+    this.step = step;
+    this.#current = start;
+  }
+
+  // Makes Range iterable
+  [Symbol.iterator]() {
+    this.#current = this.start; // reset on each for-of
+    return this;
+  }
+
+  // Makes Range an iterator
+  next() {
+    if (this.#current > this.end) {
+      return { value: undefined, done: true };
+    }
+    const value = this.#current;
+    this.#current += this.step;
+    return { value, done: false };
+  }
+
+  // Optional: return() called when for-of breaks early
+  return(value) {
+    this.#current = this.end + 1; // mark exhausted
+    return { value, done: true };
+  }
+}
+
+const range = new Range(1, 10, 2);
+console.log([...range]); // [1, 3, 5, 7, 9]
+
+// Infinite generator — pull-based, no memory issues
+function* fibonacci() {
+  let [a, b] = [0, 1];
+  while (true) {
+    yield a;
+    [a, b] = [b, a + b];
+  }
+}
+
+const fibs = fibonacci();
+console.log(Array.from({ length: 8 }, () => fibs.next().value)); // [0,1,1,2,3,5,8,13]
+
+/*
+EVALUATION CRITERIA:
+✓ Iterable protocol: [Symbol.iterator]() returns iterator object
+✓ Iterator protocol: next() returns {value, done}
+✓ Generator functions return an object that is both iterable AND iterator
+✓ return() trap allows cleanup on break/throw within for-of
+✓ Spread, destructuring, for-of, Array.from all call Symbol.iterator
+✓ Infinite generators are fine — never pulls unless explicitly requested
+*/
+
+
+// ============================================
+// QUESTION 45: Error.cause and Error Chaining
+// ============================================
+/*
+QUESTION:
+Use Error.cause (ES2022) to preserve error context through layers.
+Build a multi-layer service where each layer wraps errors with cause.
+How do you traverse the cause chain for logging?
+*/
+
+class DatabaseError extends Error {
+  constructor(message, options) {
+    super(message, options); // passes { cause } to Error constructor
+    this.name = 'DatabaseError';
+  }
+}
+
+class ServiceError extends Error {
+  constructor(message, options) {
+    super(message, options);
+    this.name = 'ServiceError';
+  }
+}
+
+async function queryDB(sql) {
+  try {
+    // simulate low-level failure
+    throw new TypeError('connection refused');
+  } catch (err) {
+    throw new DatabaseError('Query failed', { cause: err });
+  }
+}
+
+async function getUser(id) {
+  try {
+    return await queryDB(`SELECT * FROM users WHERE id = ${id}`);
+  } catch (err) {
+    throw new ServiceError(`Could not retrieve user ${id}`, { cause: err });
+  }
+}
+
+// Traverse the cause chain for structured logging
+function flattenCauses(err) {
+  const chain = [];
+  let current = err;
+  while (current) {
+    chain.push({ name: current.name, message: current.message });
+    current = current.cause;
+  }
+  return chain;
+}
+
+getUser(1).catch(err => console.log(flattenCauses(err)));
+// [{name:'ServiceError', ...}, {name:'DatabaseError', ...}, {name:'TypeError', ...}]
+
+/*
+EVALUATION CRITERIA:
+✓ Error constructor options.cause is standard — no need for custom property
+✓ cause can be any value, not just Error instances
+✓ Preserves full stack trace of original error
+✓ Logging should traverse the chain — top error alone loses context
+✓ Custom Error subclasses should pass options to super() for cause support
+✓ Serialising errors: JSON.stringify(err) only gives {} — must handle manually
+*/
+
+
+// ============================================
+// QUESTION 46: Nullish Coalescing — Edge Cases
+// ============================================
+/*
+QUESTION:
+Predict the output of each expression. Explain the precedence
+footgun when mixing ?? with && or ||.
+*/
+
+console.log(0 ?? 'default');         // 0    — 0 is NOT nullish
+console.log('' ?? 'default');        // ''   — empty string is NOT nullish
+console.log(false ?? 'default');     // false
+console.log(null ?? 'default');      // 'default'
+console.log(undefined ?? 'default'); // 'default'
+console.log(NaN ?? 'default');       // NaN  — NaN is NOT nullish
+
+// Precedence footgun — ?? has lower precedence than && and ||
+// but CANNOT be mixed with them without parentheses (SyntaxError in strict parsing)
+// console.log(x || y ?? z); // SyntaxError — mixing requires parens
+
+{
+  const nqA = null, nqB = 0, nqC = 'c';
+  console.log((nqA || nqB) ?? nqC); // (null || 0) → 0 → 0 ?? 'c' → 0
+  console.log(nqA ?? (nqB || nqC)); // null ?? (0 || 'c') → null ?? 'c' → 'c'
+}
+
+// Optional chaining + nullish coalescing
+{
+  const config = { server: { port: 0 } };
+  const port = config?.server?.port ?? 3000;
+  console.log(port); // 0 — port IS set, value 0 is valid
+
+  const host = config?.server?.host ?? 'localhost';
+  console.log(host); // 'localhost' — host is undefined (nullish)
+}
+
+/*
+EVALUATION CRITERIA:
+✓ ?? treats ONLY null and undefined as "missing" — 0/''/false are values
+✓ || treats ANY falsy value as "missing" — common footgun with 0 and ''
+✓ Mixing ?? with || or && without parens is a SyntaxError
+✓ Optional chaining (?.) short-circuits the chain but returns undefined, not null
+✓ config?.x?.y returns undefined when x is missing — ?? then fills in default
+*/
+
+
+// ============================================
+// QUESTION 47: Reflect API
+// ============================================
+/*
+QUESTION:
+Explain why you should use Reflect.set() inside a Proxy set trap
+instead of target[prop] = value. Show the difference in behaviour
+with receiver and inherited setters.
+*/
+
+class Base {
+  #_val = 0;
+  get val() { return this.#_val; }
+  set val(v) { this.#_val = v * 2; } // setter doubles the value
+}
+
+class Child extends Base {}
+
+const child = new Child();
+const proxy = new Proxy(child, {
+  set(target, prop, value, receiver) {
+    console.log('intercepted set:', prop, value);
+
+    // WRONG: target[prop] = value
+    // This bypasses the prototype setter — writes directly to target instance
+    // and ignores the inherited setter in Base
+
+    // CORRECT: Reflect.set passes receiver so prototype chain setters fire correctly
+    return Reflect.set(target, prop, value, receiver);
+  }
+});
+
+proxy.val = 5;
+console.log(proxy.val); // 10 — setter in Base ran correctly via Reflect
+
+// Reflect.apply vs Function.prototype.apply — works with non-function objects safely
+function greet(greeting) { return `${greeting}, ${this.name}`; }
+console.log(Reflect.apply(greet, { name: 'Alice' }, ['Hello'])); // "Hello, Alice"
+
+// Reflect.ownKeys — like Object.keys but includes symbols and non-enumerable
+const reflectSym = Symbol('x');
+const o = { a: 1, [reflectSym]: 2 };
+Object.defineProperty(o, 'b', { value: 3, enumerable: false });
+console.log(Reflect.ownKeys(o)); // ['a', 'b', Symbol(x)]
+
+/*
+EVALUATION CRITERIA:
+✓ Reflect mirrors every Proxy trap — always use Reflect in traps
+✓ receiver is the proxy (or object the prop was accessed on), not target
+✓ Ignoring receiver in set breaks inherited setters
+✓ Reflect.set returns boolean (success/failure) — same contract as set trap
+✓ Reflect.ownKeys = Object.keys + non-enumerable + symbols
+✓ Reflect.construct(Target, args, NewTarget) allows super() without calling constructor
+*/
+
+
+// ============================================
+// QUESTION 48: BigInt — Edge Cases
+// ============================================
+/*
+QUESTION:
+Predict the output and explain each expression. When does BigInt throw,
+and what are the implications for JSON serialisation and mixing with Number?
+*/
+
+console.log(typeof 42n);           // "bigint"
+console.log(9007199254740993n === 9007199254740993); // TypeError (can't mix without explicit cast)
+
+const big = 9007199254740993n;     // > Number.MAX_SAFE_INTEGER
+const num = Number(big);
+console.log(num === 9007199254740992); // true — precision lost in conversion!
+
+console.log(5n / 2n);             // 2n — integer division (truncated, not 2.5n)
+console.log(-7n % 3n);            // -1n — sign follows dividend (unlike Math.mod)
+
+// JSON doesn't support BigInt — throws by default
+try {
+  JSON.stringify({ id: 1234567890123456789n }); // TypeError
+} catch (e) {
+  console.log(e.message); // "Do not know how to serialize a BigInt"
+}
+
+// Fix: custom replacer
+const safeBigIntStr = JSON.stringify({ id: big }, (k, v) =>
+  typeof v === 'bigint' ? v.toString() : v
+);
+
+// Bitwise ops work on BigInt (unlike Number — limited to 32-bit)
+console.log(1n << 64n); // 18446744073709551616n — full 65-bit result
+
+/*
+EVALUATION CRITERIA:
+✓ Cannot mix BigInt and Number in arithmetic without explicit cast
+✓ Division truncates toward zero — no fractional BigInt
+✓ JSON.stringify throws — requires custom serialiser
+✓ BigInt loses precision when cast to Number (safe only up to 2^53-1)
+✓ Bitwise on Number is 32-bit; bitwise on BigInt is arbitrary width
+✓ Comparison: 1n == 1 (abstract) → true; 1n === 1 → false
+*/
+
+
+// ============================================
+// QUESTION 49: Generators as State Machines
+// ============================================
+/*
+QUESTION:
+Implement a traffic light state machine using a generator.
+The generator should accept input via next(input) and change state
+accordingly. Show how two-way communication works with generators.
+*/
+
+function* trafficLight() {
+  let state = 'red';
+
+  while (true) {
+    // yield both sends current state out AND receives input via next()
+    const input = yield state;
+
+    if (state === 'red' && input === 'go') {
+      state = 'green';
+    } else if (state === 'green' && input === 'slow') {
+      state = 'yellow';
+    } else if (state === 'yellow' && input === 'stop') {
+      state = 'red';
+    }
+    // invalid transitions are silently ignored (idempotent)
+  }
+}
+
+const light = trafficLight();
+console.log(light.next().value);         // 'red'   — first next() starts generator
+console.log(light.next('go').value);     // 'green' — input drives transition
+console.log(light.next('slow').value);   // 'yellow'
+console.log(light.next('stop').value);   // 'red'
+console.log(light.next('invalid').value); // 'red'  — no valid transition
+
+// KEY TRICKY PART:
+// The FIRST next() call CANNOT pass a value — the generator hasn't
+// reached a yield yet, so there is no yield expression to receive it.
+// The first value passed to next() is silently discarded.
+
+/*
+EVALUATION CRITERIA:
+✓ yield is an expression — value = yield state uses the value passed to next()
+✓ First next() advances to first yield; its argument is discarded
+✓ Generators maintain local state across invocations — no external state needed
+✓ Infinite loop with yield is valid — generator is pull-based
+✓ Generator.throw(err) injects an error at the yield point
+✓ Generator.return(val) terminates the generator from outside
+*/
+
+
+// ============================================
+// QUESTION 50: Prototype Chain Manipulation
+// ============================================
+/*
+QUESTION:
+What is the output? Explain each step. Then explain the performance
+implications of modifying __proto__ at runtime.
+*/
+
+function Animal(name) { this.name = name; }
+Animal.prototype.speak = function() { return `${this.name} speaks`; };
+
+function Dog(name) { Animal.call(this, name); }
+// Before ES6 class syntax, manual prototype chain setup:
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog; // restore constructor reference
+Dog.prototype.bark = function() { return `${this.name} barks`; };
+
+const dog = new Dog('Rex');
+console.log(dog.speak());                       // "Rex speaks"
+console.log(dog.bark());                        // "Rex barks"
+console.log(dog instanceof Dog);                // true
+console.log(dog instanceof Animal);             // true
+console.log(dog.constructor === Dog);           // true
+console.log(Object.getPrototypeOf(dog) === Dog.prototype); // true
+
+// Object.create vs new: Object.create(proto) creates object with proto
+// as its [[Prototype]] WITHOUT calling a constructor function
+
+// __proto__ mutation at runtime defeats V8's hidden class optimisations
+// because the engine caches property lookup paths per "shape"
+// Changing [[Prototype]] after object creation invalidates the IC (inline cache)
+const obj = { x: 1 };
+Object.setPrototypeOf(obj, { y: 2 }); // valid but slow
+// obj.__proto__ = { y: 2 }; // also works, also slow (deprecated accessor)
+
+/*
+EVALUATION CRITERIA:
+✓ Object.create(proto) sets [[Prototype]] without invoking constructor
+✓ Must manually restore .constructor after reassigning prototype
+✓ instanceof traverses [[Prototype]] chain, not .constructor
+✓ V8 hidden classes / shapes — property addition ORDER matters
+✓ Changing [[Prototype]] after creation = deoptimisation (megamorphic IC)
+✓ class syntax under the hood does the same prototype wiring automatically
+*/
+
+
+// ============================================
+// QUESTION 51: Async Promise Chain — User → Order → Details → Shipping
+// ============================================
+/*
+QUESTION:
+You are given four async functions that form a data-fetching pipeline.
+Each function depends on the result of the previous one.
+
+  getUserId()        → resolves to a userId  (simulates auth/session lookup)
+  getOrderId(userId) → resolves to an orderId (simulates fetching latest order)
+  getOrderDetails(orderId) → resolves to an order object
+  getShippingStatus(order) → resolves to a shipping status string
+
+  PART A — Chain all four using .then() only (no async/await).
+  PART B — Rewrite using async/await.
+  PART C — Wrap the entire chain in a withTimeout(promise, ms) function that
+            uses Promise.race() to reject with a TimeoutError if the chain
+            takes longer than the given number of milliseconds.
+  PART D — What is logged and in what order for the execution below?
+            Identify every tricky output step.
+
+TRICKY PARTS:
+  1. What happens if getOrderId rejects — does getShippingStatus still run?
+  2. Does Promise.race() cancel the losing promise?
+  3. withTimeout is called with 50ms but the chain takes 120ms — what is thrown?
+  4. If you attach .catch() AFTER .then() in a chain, which errors does it catch?
+*/
+
+// ─── Simulated async data layer ───────────────────────────────────────────────
+
+function getUserId() {
+  // Simulates a 40ms network call (e.g., reading a session token)
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log('[1] getUserId resolved');
+      resolve('user_42');
+    }, 40);
+  });
+}
+
+function getOrderId(userId) {
+  if (!userId) return Promise.reject(new Error('No userId provided'));
+  // Simulates a 40ms DB query
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log('[2] getOrderId resolved for', userId);
+      resolve('order_99');
+    }, 40);
+  });
+}
+
+function getOrderDetails(orderId) {
+  if (!orderId) return Promise.reject(new Error('No orderId provided'));
+  // Simulates a 40ms API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log('[3] getOrderDetails resolved for', orderId);
+      resolve({ id: orderId, item: 'Laptop', qty: 1 });
+    }, 40);
+  });
+}
+
+function getShippingStatus(order) {
+  if (!order) return Promise.reject(new Error('No order provided'));
+  // Simulates a 40ms shipping-service call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log('[4] getShippingStatus resolved for order', order.id);
+      resolve(`Order ${order.id} is OUT_FOR_DELIVERY`);
+    }, 40);
+  });
+}
+
+// ─── PART A — .then() chain ───────────────────────────────────────────────────
+
+function fetchShippingStatusThen() {
+  return getUserId()
+    .then(userId => getOrderId(userId))       // each .then returns a new Promise
+    .then(orderId => getOrderDetails(orderId))
+    .then(order => getShippingStatus(order))
+    .catch(err => {
+      // A single .catch at the end catches ANY rejection in the chain above.
+      // Once a .then is skipped due to rejection, control jumps here directly.
+      console.error('Chain failed (then):', err.message);
+      throw err; // re-throw so the caller knows it failed
+    });
+}
+
+// ─── PART B — async/await ────────────────────────────────────────────────────
+
+async function fetchShippingStatusAsync() {
+  try {
+    const userId  = await getUserId();
+    const orderId = await getOrderId(userId);  // awaiting inside try = automatic .catch
+    const order   = await getOrderDetails(orderId);
+    const status  = await getShippingStatus(order);
+    return status;
+  } catch (err) {
+    console.error('Chain failed (async):', err.message);
+    throw err;
+  }
+}
+
+// ─── PART C — withTimeout using Promise.race() ───────────────────────────────
+
+function withTimeout(promise, ms) {
+  // Creates a "timer" promise that REJECTS after ms milliseconds
+  const timeout = new Promise((_, reject) => {
+    const id = setTimeout(() => {
+      clearTimeout(id);
+      reject(new Error(`Timed out after ${ms}ms`));
+    }, ms);
+  });
+
+  // Promise.race() settles with whichever promise settles FIRST
+  // If timeout wins  → the result is a rejection with TimeoutError
+  // If promise wins  → the result is the resolved value (or its rejection)
+  return Promise.race([promise, timeout]);
+}
+
+// ─── PART D — Execution and output prediction ────────────────────────────────
+/*
+QUESTION D:
+What is the EXACT console output (including order) when this runs?
+
+  console.log('START');
+  withTimeout(fetchShippingStatusAsync(), 200)
+    .then(status => console.log('STATUS:', status))
+    .catch(err  => console.log('ERROR:', err.message));
+  console.log('END');
+
+The chain takes 4 × 40ms = 160ms total.
+The timeout is 200ms.
+
+ANSWER:
+  START                                     ← synchronous
+  END                                       ← synchronous (Promise not awaited)
+  [1] getUserId resolved                    ← after ~40ms
+  [2] getOrderId resolved for user_42       ← after ~80ms
+  [3] getOrderDetails resolved for order_99 ← after ~120ms
+  [4] getShippingStatus resolved for order order_99  ← after ~160ms
+  STATUS: Order order_99 is OUT_FOR_DELIVERY ← chain wins the race (160ms < 200ms)
+
+KEY TRICKY INSIGHTS:
+  • "END" logs before any async callbacks — the call stack runs to completion first.
+  • withTimeout(fetchShippingStatusAsync(), ...) starts the async function immediately
+    when called — it is already running; the returned Promise is passed to race().
+  • Promise.race() does NOT cancel the losing promise. The timer promise that loses
+    keeps its setTimeout alive until it fires — it just has no observers.
+    In production, you should clear the timeout to avoid the leak:
+      const timeout = new Promise((_, reject) => {
+        const id = setTimeout(() => reject(...), ms);
+        promise.finally(() => clearTimeout(id)); // cleanup win or lose
+      });
+  • If the timeout were 100ms (chain takes 160ms), race() would reject first:
+      ERROR: Timed out after 100ms
+    — BUT getOrderDetails and getShippingStatus are still running in the background
+      because the JS runtime doesn't cancel setTimeout callbacks!
+  • A .catch() at the end of a .then() chain catches rejections from ALL preceding
+    .then() handlers, not just the immediately previous one.
+*/
+
+// ─── PART E — Error propagation quiz ─────────────────────────────────────────
+/*
+QUESTION E: What is logged for each case?
+*/
+
+// Case 1: rejection in the MIDDLE of the chain
+getUserId()
+  .then(() => Promise.reject(new Error('step 2 failed'))) // rejects here
+  .then(orderId => {
+    console.log('NEVER REACHED'); // skipped — promise is rejected
+    return getOrderDetails(orderId);
+  })
+  .then(order => getShippingStatus(order))  // also skipped
+  .catch(err => console.log('Caught:', err.message)); // → "Caught: step 2 failed"
+
+// Case 2: .catch() followed by .then() — recovery
+getUserId()
+  .then(() => Promise.reject(new Error('boom')))
+  .catch(err => {
+    console.log('Recovered from:', err.message); // → "Recovered from: boom"
+    return 'fallback_order_id';                   // catch RETURNS a value — chain continues!
+  })
+  .then(orderId => console.log('Continued with:', orderId)); // → "Continued with: fallback_order_id"
+
+// Case 3: unhandled rejection (no .catch) — throws UnhandledPromiseRejection in Node
+// getUserId().then(() => Promise.reject(new Error('unhandled')));
+
+// ─── PART F — withTimeout with cleanup (production-grade) ────────────────────
+
+function withTimeoutClean(promise, ms) {
+  let timerId;
+
+  const timeout = new Promise((_, reject) => {
+    timerId = setTimeout(
+      () => reject(new Error(`Timed out after ${ms}ms`)),
+      ms
+    );
+  });
+
+  // Whether promise wins or timeout wins, clear the timer to avoid the leak
+  return Promise.race([promise, timeout])
+    .finally(() => clearTimeout(timerId));
+}
+
+// Usage
+withTimeoutClean(fetchShippingStatusAsync(), 200)
+  .then(status => console.log('FINAL STATUS:', status))
+  .catch(err   => console.log('FINAL ERROR:', err.message));
+
+/*
+EVALUATION CRITERIA:
+✓ Understands Promise chaining — each .then() returns a NEW Promise
+✓ Knows that a rejection skips all subsequent .then() until the next .catch()
+✓ .catch() that returns a value RESOLVES the chain — it is a recovery point
+✓ async/await is syntactic sugar over .then()/.catch() — same microtask semantics
+✓ Promise.race() settles with the FIRST settled promise (resolved OR rejected)
+✓ Promise.race() does NOT cancel or abort the losing promises
+✓ Losing timeout keeps its setTimeout alive — must use .finally() to clear it
+✓ "END" logs before async callbacks — event loop processes microtasks after call stack
+✓ Total chain time = sum of sequential awaits (not parallel) — 4 × 40ms = 160ms
+✓ Knows the difference between parallel (Promise.all) and sequential (await each) fetching
+✓ Unhandled rejections crash Node.js and trigger window.onunhandledrejection in browsers
+*/

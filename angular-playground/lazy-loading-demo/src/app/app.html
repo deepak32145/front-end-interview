@@ -1,0 +1,12 @@
+<nav class="navbar">
+  <span class="brand">LazyApp</span>
+  <ul class="nav-links">
+    <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
+    <li><a routerLink="/about" routerLinkActive="active">About</a></li>
+    <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+    <li><a routerLink="/careers" routerLinkActive="active">Careers</a></li>
+  </ul>
+</nav>
+
+<!-- Each lazy module renders its component here -->
+<router-outlet></router-outlet>
