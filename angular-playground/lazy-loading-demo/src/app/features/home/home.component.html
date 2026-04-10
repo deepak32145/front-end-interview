@@ -1,0 +1,41 @@
+<section class="hero">
+  <h1>Welcome to Lazy Loading Demo</h1>
+  <p>
+    This Angular app demonstrates <strong>lazy loading</strong> — each feature
+    module is bundled into a separate chunk and only downloaded when the user
+    navigates to that route. Open the <strong>Network</strong> tab and click
+    the nav links to see it in action.
+  </p>
+</section>
+
+<section class="username-checker">
+  <h2>Username Availability Checker</h2>
+  <p class="hint">
+    Type a username — the API is called after you stop typing (500ms debounce).
+    If you start typing again before the response arrives, the previous request
+    is cancelled via <code>switchMap</code>. Check the Network tab to see it.
+  </p>
+
+  <div class="input-row">
+    <input
+      #usernameInput
+      type="text"
+      placeholder="e.g. deepak_dev"
+      class="username-input"
+      autocomplete="off"
+    />
+    <button class="clear-btn" (click)="onClear()">Clear</button>
+  </div>
+
+  <!-- Status indicators -->
+  <div class="status-box" [ngClass]="status">
+    <ng-container [ngSwitch]="status">
+      <span *ngSwitchCase="'idle'" class="idle-msg">Start typing to check availability</span>
+      <span *ngSwitchCase="'checking'">
+        <span class="spinner"></span> Checking... (10s delay — try typing again to see cancellation)
+      </span>
+      <span *ngSwitchCase="'available'">✔ {{ result?.message }}</span>
+      <span *ngSwitchCase="'taken'">✖ {{ result?.message }}</span>
+    </ng-container>
+  </div>
+</section>

@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const usernames = require('./usernames.json');
 
 const app = express();
 const PORT = 3000;
@@ -58,10 +61,166 @@ function respond(res, category, ms = 100) {
 // Routes — individual department endpoints
 // ---------------------------------------------------------------------------
 
-app.get('/api/careers/developer', (req, res) => respond(res, 'developer', 80));
-app.get('/api/careers/admin',     (req, res) => respond(res, 'admin',     120));
-app.get('/api/careers/hr',        (req, res) => respond(res, 'hr',        60));
-app.get('/api/careers/accounts',  (req, res) => respond(res, 'accounts',  100));
+app.get('/api/careers/developer', (req, res) => respond(res, 'developer', 10000));
+app.get('/api/careers/admin',     (req, res) => respond(res, 'admin',     10000));
+app.get('/api/careers/hr',        (req, res) => respond(res, 'hr',        10000));
+app.get('/api/careers/accounts',  (req, res) => respond(res, 'accounts',  10000));
+
+// ---------------------------------------------------------------------------
+// Username availability — GET /api/username/check?query=deepak
+// 10 second simulated delay so switchMap cancellation is visible in Network tab
+// ---------------------------------------------------------------------------
+
+app.get('/api/username/check', (req, res) => {
+  const query = (req.query.query || '').toString().trim().toLowerCase();
+
+  if (!query) {
+    return res.status(400).json({ error: 'query param is required' });
+  }
+
+  setTimeout(() => {
+    const taken = usernames.map(u => u.toLowerCase()).includes(query);
+    res.json({
+      query,
+      available: !taken,
+      message: taken
+        ? `"${query}" is already taken`
+        : `"${query}" is available`,
+    });
+  }, 10000); // 10 second delay
+});
+
+// ---------------------------------------------------------------------------
+// Products data
+// ---------------------------------------------------------------------------
+
+const products = [
+  { id: 1,  name: 'MacBook Pro 14"',            category: 'electronics', price: 1999, rating: 4.8, stock: 5  },
+  { id: 2,  name: 'Dell XPS 15',                category: 'electronics', price: 1599, rating: 4.6, stock: 3  },
+  { id: 3,  name: 'Sony WH-1000XM5',            category: 'electronics', price: 349,  rating: 4.9, stock: 0  },
+  { id: 4,  name: 'iPad Pro 12.9"',             category: 'electronics', price: 1099, rating: 4.7, stock: 8  },
+  { id: 5,  name: 'Samsung 4K Monitor',         category: 'electronics', price: 599,  rating: 4.5, stock: 4  },
+  { id: 6,  name: 'Mechanical Keyboard',        category: 'electronics', price: 149,  rating: 4.4, stock: 12 },
+  { id: 7,  name: 'Logitech MX Master 3',       category: 'electronics', price: 99,   rating: 4.7, stock: 7  },
+  { id: 8,  name: 'USB-C Hub 10-in-1',          category: 'electronics', price: 59,   rating: 4.3, stock: 20 },
+  { id: 9,  name: 'Clean Code',                 category: 'books',       price: 35,   rating: 4.9, stock: 15 },
+  { id: 10, name: "You Don't Know JS",          category: 'books',       price: 29,   rating: 4.8, stock: 9  },
+  { id: 11, name: 'The Pragmatic Programmer',   category: 'books',       price: 40,   rating: 4.7, stock: 0  },
+  { id: 12, name: 'Designing Data-Intensive Apps', category: 'books',    price: 55,   rating: 4.9, stock: 6  },
+  { id: 13, name: 'Angular Up & Running',       category: 'books',       price: 45,   rating: 4.5, stock: 11 },
+  { id: 14, name: 'RxJS in Action',             category: 'books',       price: 38,   rating: 4.6, stock: 8  },
+  { id: 15, name: 'Ergonomic Chair',            category: 'furniture',   price: 499,  rating: 4.6, stock: 2  },
+  { id: 16, name: 'Standing Desk',              category: 'furniture',   price: 799,  rating: 4.7, stock: 0  },
+  { id: 17, name: 'Monitor Arm',               category: 'furniture',   price: 89,   rating: 4.5, stock: 10 },
+  { id: 18, name: 'Desk Mat XL',               category: 'furniture',   price: 39,   rating: 4.4, stock: 25 },
+  { id: 19, name: 'LED Desk Lamp',             category: 'furniture',   price: 69,   rating: 4.3, stock: 14 },
+  { id: 20, name: 'Webcam 4K',                 category: 'electronics', price: 199,  rating: 4.5, stock: 3  },
+];
+
+// ---------------------------------------------------------------------------
+// Products — GET /api/products?search=mac&category=electronics
+// ---------------------------------------------------------------------------
+
+app.get('/api/products', (req, res) => {
+  const search   = (req.query.search   || '').toString().trim().toLowerCase();
+  const category = (req.query.category || '').toString().trim().toLowerCase();
+
+  let results = products;
+
+  if (category && category !== 'all') {
+    results = results.filter(p => p.category === category);
+  }
+
+  if (search) {
+    results = results.filter(p => p.name.toLowerCase().includes(search));
+  }
+
+  // Simulate network latency
+  setTimeout(() => {
+    res.json({ results, total: results.length });
+  }, 600);
+});
+
+// ---------------------------------------------------------------------------
+// Stock check — GET /api/products/:id/stock
+// Deliberately slow (2s) so optimistic UI + rollback pattern is visible
+// ---------------------------------------------------------------------------
+
+app.get('/api/products/:id/stock', (req, res) => {
+  const id = parseInt(req.params.id);
+  const product = products.find(p => p.id === id);
+
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  setTimeout(() => {
+    res.json({ id, name: product.name, inStock: product.stock > 0, stock: product.stock });
+  }, 2000);
+});
+
+// ---------------------------------------------------------------------------
+// Add to cart — PATCH /api/products/:id/cart
+// Decrements stock count by quantity (default 1).
+// Returns 409 if out of stock.
+// ---------------------------------------------------------------------------
+
+app.patch('/api/products/:id/cart', (req, res) => {
+  const id = parseInt(req.params.id);
+  const quantity = parseInt(req.body.quantity) || 1;
+  const product = products.find(p => p.id === id);
+
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  if (product.stock < quantity) {
+    return res.status(409).json({
+      error: 'Out of stock',
+      id,
+      name: product.name,
+      stock: product.stock,
+      inStock: false,
+    });
+  }
+
+  product.stock -= quantity;
+
+  console.log(`[CART] "${product.name}" — stock: ${product.stock + quantity} → ${product.stock}`);
+
+  res.json({
+    id,
+    name: product.name,
+    stock: product.stock,
+    inStock: product.stock > 0,
+    message: `Stock decremented by ${quantity}`,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dynamic Form — POST /api/form/submit
+// Saves payload as timestamped JSON file in ./submissions/
+// ---------------------------------------------------------------------------
+
+const SUBMISSIONS_DIR = path.join(__dirname, 'submissions');
+
+app.post('/api/form/submit', (req, res) => {
+  const payload = req.body;
+  if (!payload || Object.keys(payload).length === 0) {
+    return res.status(400).json({ error: 'Empty payload' });
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename  = `submission-${timestamp}.json`;
+  const filepath  = path.join(SUBMISSIONS_DIR, filename);
+
+  const record = { submittedAt: new Date().toISOString(), data: payload };
+
+  fs.writeFileSync(filepath, JSON.stringify(record, null, 2), 'utf8');
+  console.log(`[FORM] Saved submission → ${filename}`);
+
+  res.status(201).json({ success: true, filename, submittedAt: record.submittedAt });
+});
 
 // ---------------------------------------------------------------------------
 // Health check

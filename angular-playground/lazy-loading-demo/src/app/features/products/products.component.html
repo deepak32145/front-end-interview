@@ -1,0 +1,88 @@
+<div class="layout">
+
+  <!-- LEFT: Search + Product grid -->
+  <div class="main">
+    <h2>Product Catalogue</h2>
+
+    <form [formGroup]="form" class="filters">
+      <input
+        formControlName="search"
+        type="text"
+        placeholder="Search products..."
+        class="search-input"
+        autocomplete="off"
+      />
+      <select formControlName="category" class="category-select">
+        <option *ngFor="let cat of categories" [value]="cat">
+          {{ cat | titlecase }}
+        </option>
+      </select>
+      <span *ngIf="searching" class="spinner-inline"></span>
+    </form>
+
+    <ng-container *ngIf="products$ | async as products">
+      <p class="result-count">{{ products.length }} product{{ products.length !== 1 ? 's' : '' }} found</p>
+
+      <div *ngIf="products.length === 0 && !searching" class="empty">
+        No products match your search.
+      </div>
+
+      <div class="product-grid">
+        <div class="product-card" *ngFor="let p of products">
+          <div class="product-info">
+            <span class="category-tag">{{ p.category }}</span>
+            <h3>{{ p.name }}</h3>
+            <div class="rating">★ {{ p.rating }}</div>
+            <div class="price">${{ p.price }}</div>
+            <div class="stock" [class.low]="p.stock > 0 && p.stock <= 3" [class.out]="p.stock === 0">
+              {{ p.stock === 0 ? 'Out of stock' : p.stock + ' in stock' }}
+            </div>
+          </div>
+
+          <!-- Error shown after optimistic rollback -->
+          <div *ngIf="cardState[p.id]?.error" class="card-error">
+            {{ cardState[p.id].error }}
+          </div>
+
+          <button
+            class="add-btn"
+            [class.checking]="cardState[p.id]?.adding"
+            (click)="addToCart(p)"
+            [disabled]="cardState[p.id]?.adding"
+          >
+            <span *ngIf="!cardState[p.id]?.adding">Add to Cart</span>
+            <span *ngIf="cardState[p.id]?.adding">
+              <span class="btn-spinner"></span> Checking stock...
+            </span>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- RIGHT: Cart -->
+  <div class="cart">
+    <h3>Cart <span class="cart-badge" *ngIf="(cartCount$ | async) as count">{{ count }}</span></h3>
+
+    <div *ngIf="(cartItems$ | async) as items">
+      <div *ngIf="items.length === 0" class="cart-empty">Your cart is empty</div>
+
+      <div class="cart-item" *ngFor="let item of items">
+        <div class="cart-item-info">
+          <span class="cart-item-name">{{ item.product.name }}</span>
+          <span class="cart-item-qty">x{{ item.quantity }}</span>
+        </div>
+        <div class="cart-item-right">
+          <span class="cart-item-price">${{ item.product.price * item.quantity }}</span>
+          <button class="remove-btn" (click)="removeFromCart(item.product.id)">✕</button>
+        </div>
+      </div>
+
+      <div class="cart-total" *ngIf="items.length > 0">
+        <span>Total</span>
+        <strong>${{ cartTotal$ | async }}</strong>
+      </div>
+    </div>
+  </div>
+
+</div>

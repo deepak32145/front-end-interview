@@ -31,6 +31,16 @@ const routes: Routes = [
     loadChildren: () =>
       import('./features/careers/careers-module').then((m) => m.CareersModule),
   },
+  {
+    path: 'products',
+    loadChildren: () =>
+      import('./features/products/products-module').then((m) => m.ProductsModule),
+  },
+  {
+    path: 'apply',
+    loadChildren: () =>
+      import('./features/dynamic-forms/dynamic-forms-module').then((m) => m.DynamicFormsModule),
+  },
   // Redirect any unknown path back to home
   { path: '**', redirectTo: '' },
 ];

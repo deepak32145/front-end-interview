@@ -1,0 +1,23 @@
+[
+  "deepak_dev", "angular_ninja", "rxjs_master", "typescript_pro", "node_wizard",
+  "javascript_guru", "react_hero", "vue_master", "css_artist", "html_wizard",
+  "fullstack_dev", "backend_boss", "frontend_ace", "devops_king", "cloud_surfer",
+  "api_builder", "db_master", "sql_wizard", "mongo_dev", "redis_ninja",
+  "docker_pro", "kubernetes_ace", "git_expert", "linux_guru", "bash_wizard",
+  "python_dev", "java_ninja", "kotlin_pro", "swift_ace", "go_master",
+  "rust_hero", "csharp_dev", "php_wizard", "ruby_ninja", "scala_pro",
+  "elixir_ace", "haskell_guru", "clojure_dev", "erlang_wizard", "fortran_pro",
+  "cobol_master", "assembly_ace", "webdev_hero", "mobile_dev", "ux_designer",
+  "ui_master", "product_ninja", "scrum_master", "agile_pro", "tdd_ace",
+  "bdd_guru", "ci_cd_wizard", "testing_ninja", "qa_master", "security_pro",
+  "pentest_ace", "ethical_hacker", "sre_hero", "platform_dev", "infra_ninja",
+  "data_wizard", "ml_master", "ai_pro", "nlp_ace", "cv_guru",
+  "data_scientist", "analyst_pro", "bi_ninja", "etl_master", "pipeline_ace",
+  "spark_guru", "kafka_wizard", "rabbitmq_pro", "graphql_ninja", "restful_ace",
+  "grpc_master", "websocket_pro", "webrtc_ninja", "three_js_ace", "webgl_guru",
+  "canvas_wizard", "svg_master", "d3_pro", "chart_ninja", "animation_ace",
+  "accessibility_guru", "performance_pro", "seo_ninja", "pwa_master", "wasm_ace",
+  "micro_frontend", "monorepo_pro", "nx_wizard", "turborepo_ninja", "vite_ace",
+  "webpack_guru", "rollup_pro", "esbuild_ninja", "swc_master", "bun_ace",
+  "deno_wizard", "nextjs_pro", "nuxt_ninja", "astro_master", "remix_ace"
+]

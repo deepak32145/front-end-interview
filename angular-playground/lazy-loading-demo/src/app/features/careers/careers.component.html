@@ -1,0 +1,46 @@
+<section class="page">
+  <h2>Careers Dashboard</h2>
+  <p>Join our team — we have openings across all departments.</p>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading">
+    <span class="spinner"></span> Fetching open positions...
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="error">
+    Could not load positions. Make sure the API server is running on port 3000.
+    <br /><small>{{ error }}</small>
+  </div>
+
+  <!-- Dashboard -->
+  <ng-container *ngIf="dashboard && !loading">
+    <div class="summary-bar">
+      <span class="total">{{ dashboard.totalOpenings }} open positions</span>
+      <span class="sub">across 4 departments</span>
+    </div>
+
+    <div class="departments">
+      <div class="dept-card" *ngFor="let dept of departments">
+        <div class="dept-header" [ngClass]="dept.key">
+          <span class="dept-icon">{{ dept.icon }}</span>
+          <span class="dept-name">{{ dept.label }}</span>
+          <span class="dept-count">{{ dept.data.count }} roles</span>
+        </div>
+        <div class="job-list">
+          <div class="job-row" *ngFor="let job of dept.data.jobs">
+            <div class="job-info">
+              <strong>{{ job.title }}</strong>
+              <span class="team-tag">{{ job.team }}</span>
+            </div>
+            <div class="job-meta">
+              <span class="location">{{ job.location }}</span>
+              <span class="openings">{{ job.openings }} opening{{ job.openings > 1 ? 's' : '' }}</span>
+              <button class="apply-btn">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</section>

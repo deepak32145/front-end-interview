@@ -1,0 +1,36 @@
+<div class="page-wrapper">
+  <div class="form-card">
+
+    <!-- Header -->
+    <div class="form-header">
+      <h1>Job Application</h1>
+      <p>Complete the form below. Fields marked <span class="req">*</span> are required.</p>
+    </div>
+
+    <!-- Live change log -->
+    <div class="change-log" *ngIf="lastChange">
+      <span class="change-key">{{ lastChange.key }}</span>
+      changed →
+      <span class="change-val">{{ lastChange.value | json }}</span>
+    </div>
+
+    <!-- Success banner -->
+    <div class="banner banner--success" *ngIf="submitState === 'success'">
+      ✔ Application submitted! Saved as <code>{{ savedFilename }}</code>
+    </div>
+
+    <!-- Error banner -->
+    <div class="banner banner--error" *ngIf="submitState === 'error'">
+      ✖ Submission failed. Make sure the API server is running on port 3000.
+    </div>
+
+    <!-- The dynamic form -->
+    <app-dynamic-form
+      [fields]="fields"
+      submitLabel="Submit Application"
+      (fieldChange)="onFieldChange($event)"
+      (formSubmit)="onFormSubmit($event)"
+    ></app-dynamic-form>
+
+  </div>
+</div>

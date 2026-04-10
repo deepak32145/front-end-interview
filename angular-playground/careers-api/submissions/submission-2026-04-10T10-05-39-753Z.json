@@ -1,0 +1,32 @@
+{
+  "submittedAt": "2026-04-10T10:05:39.753Z",
+  "data": {
+    "firstName": "deepak",
+    "lastName": "choudhary",
+    "email": "deepak32145@gmail.com",
+    "phone": "9711357801",
+    "dob": "1999-02-03",
+    "website": "https://dc.com",
+    "jobTitle": "senior software dev",
+    "experience": "0-1",
+    "department": "product",
+    "country": "UK",
+    "salary": "322343",
+    "noticePeriod": 45,
+    "skills": [
+      "nodejs",
+      "angular"
+    ],
+    "workMode": "remote",
+    "employmentType": [
+      "fulltime"
+    ],
+    "relocate": true,
+    "clearanceLevel": "none",
+    "bio": "good dev asdfasdf asf asf asf asdfasdf asdf asdf asd fasdf ",
+    "resume": "01_bank_statement.pdf",
+    "portfolio": "",
+    "newsletter": true,
+    "agreeTerms": true
+  }
+}

@@ -1,0 +1,117 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+  <!-- Validation summary — appears after first submit attempt on invalid form -->
+  <div class="validation-summary" *ngIf="submitAttempted && form.invalid">
+    <span class="summary-icon">⚠</span>
+    <span>Please fix <strong>{{ invalidCount }}</strong> error{{ invalidCount > 1 ? 's' : '' }} before submitting.</span>
+  </div>
+
+  <div class="form-grid">
+    <div
+      *ngFor="let field of fields"
+      class="form-field-cell"
+      [class.full-width]="field.width === 'full' || !field.width"
+      [class.half-width]="field.width === 'half'"
+      [class.cell-invalid]="isFieldInvalid(field.key)"
+    >
+      <ng-container [ngSwitch]="field.type">
+
+        <app-form-input
+          *ngSwitchCase="'input'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-input>
+
+        <app-form-textarea
+          *ngSwitchCase="'textarea'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-textarea>
+
+        <app-form-select
+          *ngSwitchCase="'select'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-select>
+
+        <app-form-search-select
+          *ngSwitchCase="'search-select'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-search-select>
+
+        <app-form-radio
+          *ngSwitchCase="'radio'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-radio>
+
+        <app-form-checkbox
+          *ngSwitchCase="'checkbox'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-checkbox>
+
+        <app-form-checkbox-group
+          *ngSwitchCase="'checkbox-group'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-checkbox-group>
+
+        <app-form-date
+          *ngSwitchCase="'date'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-date>
+
+        <app-form-toggle
+          *ngSwitchCase="'toggle'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-toggle>
+
+        <app-form-range
+          *ngSwitchCase="'range'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-range>
+
+        <app-form-tags
+          *ngSwitchCase="'tags'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-tags>
+
+        <app-form-file
+          *ngSwitchCase="'file'"
+          [config]="field"
+          [control]="getControl(field.key)"
+          (fieldChange)="onFieldChange($event)"
+        ></app-form-file>
+
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" (click)="onReset()">Reset</button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="submitAttempted && form.invalid"
+      [class.btn-disabled]="submitAttempted && form.invalid"
+      [title]="submitAttempted && form.invalid ? 'Fix all errors before submitting' : ''"
+    >{{ submitLabel }}</button>
+  </div>
+</form>

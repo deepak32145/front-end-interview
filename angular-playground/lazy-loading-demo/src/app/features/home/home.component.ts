@@ -1,30 +1,70 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { fromEvent, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+
+interface UsernameResult {
+  query: string;
+  available: boolean;
+  message: string;
+}
 
 @Component({
   selector: 'app-home',
   standalone: false,
-  template: `
-    <section class="hero">
-      <h1>Welcome to Lazy Loading Demo</h1>
-      <p>
-        This Angular app demonstrates <strong>lazy loading</strong> — each feature
-        module (About, Contact, Careers) is bundled into a separate chunk and only
-        downloaded when the user navigates to that route.
-      </p>
-      <ul class="how-it-works">
-        <li>Open the browser <strong>Network</strong> tab</li>
-        <li>Click <strong>About</strong>, <strong>Contact</strong>, or <strong>Careers</strong> in the nav</li>
-        <li>Watch a new <code>.js</code> chunk load on demand</li>
-      </ul>
-    </section>
-  `,
-  styles: [`
-    .hero { max-width: 640px; margin: 60px auto; text-align: center; }
-    h1 { font-size: 2rem; margin-bottom: 1rem; color: #3f51b5; }
-    p { font-size: 1.1rem; line-height: 1.6; color: #444; }
-    .how-it-works { list-style: none; padding: 0; margin-top: 1.5rem; }
-    .how-it-works li { padding: 0.4rem 0; font-size: 1rem; color: #555; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
-  `]
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.scss',
 })
-export class HomeComponent {}
+export class HomeComponent implements OnInit, OnDestroy {
+  @ViewChild('usernameInput', { static: true }) inputRef!: ElementRef<HTMLInputElement>;
+
+  status: 'idle' | 'checking' | 'available' | 'taken' = 'idle';
+  result: UsernameResult | null = null;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    fromEvent<Event>(this.inputRef.nativeElement, 'input').pipe(
+      // extract the typed value
+      map((event) => (event.target as HTMLInputElement).value.trim()),
+      // wait until user stops typing for 500ms
+      debounceTime(500),
+      // skip if same value as last emission
+      distinctUntilChanged(),
+      // skip empty strings
+      filter((query) => query.length > 0),
+      // show checking state immediately when a new query is about to fire
+      tap(() => {
+        this.status = 'checking';
+        this.result = null;
+      }),
+      // switchMap cancels the previous HTTP request when a new query arrives
+      switchMap((query) =>
+        this.http.get<UsernameResult>(`http://localhost:3000/api/username/check?query=${query}`)
+      ),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (data) => {
+        this.result = data;
+        this.status = data.available ? 'available' : 'taken';
+      },
+      error: (err) => {
+        console.error('Username check failed:', err);
+        this.status = 'idle';
+      },
+    });
+  }
+
+  onClear(): void {
+    this.inputRef.nativeElement.value = '';
+    this.status = 'idle';
+    this.result = null;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
