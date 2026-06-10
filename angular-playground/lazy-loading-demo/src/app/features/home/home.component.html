@@ -27,7 +27,6 @@
     <button class="clear-btn" (click)="onClear()">Clear</button>
   </div>
 
-  <!-- Status indicators -->
   <div class="status-box" [ngClass]="status">
     <ng-container [ngSwitch]="status">
       <span *ngSwitchCase="'idle'" class="idle-msg">Start typing to check availability</span>
@@ -36,6 +35,73 @@
       </span>
       <span *ngSwitchCase="'available'">✔ {{ result?.message }}</span>
       <span *ngSwitchCase="'taken'">✖ {{ result?.message }}</span>
+    </ng-container>
+  </div>
+</section>
+
+<!-- ── Chained API Demo ─────────────────────────────────────────────────── -->
+<section class="user-profile-search">
+  <h2>Chained API: User Search → Profile</h2>
+  <p class="hint">
+    Two sequential API calls chained with <code>switchMap</code>:<br/>
+    <strong>Step 1</strong> <code>GET /api/user/search?name=…</code> — finds the user and returns their <code>id</code>.<br/>
+    <strong>Step 2</strong> <code>GET /api/user/:id/profile</code> — uses that <code>id</code> to fetch the full profile.<br/>
+    Try: <em>alice</em>, <em>bob</em>, <em>carol</em>, <em>deepak</em>, <em>eva</em>
+  </p>
+
+  <div class="input-row">
+    <input
+      #userSearchInput
+      type="text"
+      placeholder="e.g. alice"
+      class="username-input"
+      autocomplete="off"
+    />
+    <button class="clear-btn" (click)="onClearUserSearch()">Clear</button>
+  </div>
+
+  <!-- Step-1 result badge — appears as soon as the first call returns -->
+  <div class="step-badge" *ngIf="foundUser">
+    <span class="step-label">Step 1 done</span>
+    Found <strong>{{ foundUser.name }}</strong> (id: {{ foundUser.id }}) &mdash; {{ foundUser.role }}
+    <span class="spinner-small" *ngIf="profileStatus === 'searching'"></span>
+  </div>
+
+  <!-- Status / profile card -->
+  <div class="profile-status" [ngClass]="profileStatus">
+    <ng-container [ngSwitch]="profileStatus">
+
+      <span *ngSwitchCase="'idle'" class="idle-msg">
+        Type a name above to search
+      </span>
+
+      <span *ngSwitchCase="'searching'">
+        <span class="spinner"></span>
+        {{ foundUser ? 'Fetching full profile…' : 'Searching…' }}
+      </span>
+
+      <div *ngSwitchCase="'found'" class="profile-card">
+        <div class="profile-header">
+          <div class="avatar">{{ profile?.name?.charAt(0) }}</div>
+          <div>
+            <div class="profile-name">{{ profile?.name }}</div>
+            <div class="profile-role">{{ profile?.role }}</div>
+          </div>
+        </div>
+        <div class="profile-body">
+          <div class="profile-row"><span class="label">Email</span>{{ profile?.email }}</div>
+          <div class="profile-row"><span class="label">Joined</span>{{ profile?.joined }}</div>
+          <div class="profile-row"><span class="label">Bio</span>{{ profile?.bio }}</div>
+          <div class="profile-row">
+            <span class="label">Skills</span>
+            <span class="skill-tag" *ngFor="let s of profile?.skills">{{ s }}</span>
+          </div>
+        </div>
+      </div>
+
+      <span *ngSwitchCase="'not-found'">✖ No user found — try alice, bob, carol, deepak or eva</span>
+      <span *ngSwitchCase="'error'">✖ Something went wrong. Is the server running on port 3000?</span>
+
     </ng-container>
   </div>
 </section>

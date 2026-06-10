@@ -61,10 +61,10 @@ function respond(res, category, ms = 100) {
 // Routes — individual department endpoints
 // ---------------------------------------------------------------------------
 
-app.get('/api/careers/developer', (req, res) => respond(res, 'developer', 10000));
-app.get('/api/careers/admin',     (req, res) => respond(res, 'admin',     10000));
-app.get('/api/careers/hr',        (req, res) => respond(res, 'hr',        10000));
-app.get('/api/careers/accounts',  (req, res) => respond(res, 'accounts',  10000));
+app.get('/api/careers/developer', (_req, res) => respond(res, 'developer', 10000));
+app.get('/api/careers/admin',     (_req, res) => respond(res, 'admin',     10000));
+app.get('/api/careers/hr',        (_req, res) => respond(res, 'hr',        10000));
+app.get('/api/careers/accounts',  (_req, res) => respond(res, 'accounts',  10000));
 
 // ---------------------------------------------------------------------------
 // Username availability — GET /api/username/check?query=deepak
@@ -220,6 +220,70 @@ app.post('/api/form/submit', (req, res) => {
   console.log(`[FORM] Saved submission → ${filename}`);
 
   res.status(201).json({ success: true, filename, submittedAt: record.submittedAt });
+});
+
+// ---------------------------------------------------------------------------
+// Chained API demo
+// ---------------------------------------------------------------------------
+
+// Fake user directory
+const users = [
+  { id: 101, name: 'Alice Johnson',  role: 'Frontend Engineer' },
+  { id: 102, name: 'Bob Smith',      role: 'Backend Engineer'  },
+  { id: 103, name: 'Carol White',    role: 'DevOps Engineer'   },
+  { id: 104, name: 'Deepak Sharma',  role: 'Full Stack Engineer' },
+  { id: 105, name: 'Eva Martinez',   role: 'QA Engineer'       },
+];
+
+const profiles = {
+  101: { email: 'alice@company.io',  joined: '2021-03-15', skills: ['Angular', 'TypeScript', 'RxJS'],          bio: 'Loves building reactive UIs.' },
+  102: { email: 'bob@company.io',    joined: '2020-07-22', skills: ['Node.js', 'PostgreSQL', 'Docker'],        bio: 'API design enthusiast.' },
+  103: { email: 'carol@company.io',  joined: '2019-11-01', skills: ['Kubernetes', 'CI/CD', 'Terraform'],       bio: 'Keeps the pipelines green.' },
+  104: { email: 'deepak@company.io', joined: '2022-01-10', skills: ['Angular', 'Node.js', 'MongoDB', 'RxJS'],  bio: 'Fullstack dev, coffee addict.' },
+  105: { email: 'eva@company.io',    joined: '2023-05-18', skills: ['Cypress', 'Jest', 'Playwright'],          bio: 'Nothing ships without tests.' },
+};
+
+/**
+ * Step 1 — search by name fragment
+ * GET /api/user/search?name=alice
+ * Returns basic user info: { id, name, role }
+ */
+app.get('/api/user/search', (req, res) => {
+  const query = (req.query.name || '').toString().trim().toLowerCase();
+
+  if (!query) {
+    return res.status(400).json({ error: 'name query param is required' });
+  }
+
+  const match = users.find(u => u.name.toLowerCase().includes(query));
+
+  if (!match) {
+    return res.status(404).json({ error: `No user found matching "${query}"` });
+  }
+
+  // Simulate network delay
+  setTimeout(() => {
+    res.json({ id: match.id, name: match.name, role: match.role });
+  }, 500);
+});
+
+/**
+ * Step 2 — fetch full profile by the id returned from step 1
+ * GET /api/user/:id/profile
+ * Returns full details: { id, name, role, email, joined, skills, bio }
+ */
+app.get('/api/user/:id/profile', (req, res) => {
+  const id = parseInt(req.params.id);
+  const user = users.find(u => u.id === id);
+  const profile = profiles[id];
+
+  if (!user || !profile) {
+    return res.status(404).json({ error: `User ${id} not found` });
+  }
+
+  setTimeout(() => {
+    res.json({ id, name: user.name, role: user.role, ...profile });
+  }, 500);
 });
 
 // ---------------------------------------------------------------------------

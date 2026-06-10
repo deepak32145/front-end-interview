@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><title>this binding</title></head>
+<body>
+  <p>Open DevTools Console (F12) to see output</p>
+  <script>
+    var name = 'deepak';
+
+    const obj = {
+      name: 'Alice',
+      greet: function () {
+        const inner = () => console.log(this.name);
+        inner();
+      },
+      greetRegular: function () {
+        function inner() { console.log(this.name); }
+        inner();
+      }
+    };
+
+    obj.greet();        // Alice
+    obj.greetRegular(); // deepak (browser: this = window, window.name = 'deepak')
+  </script>
+</body>
+</html>

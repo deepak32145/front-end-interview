@@ -5,7 +5,11 @@
       "Bash(npx -y @angular/cli@latest new lazy-loading-demo --routing=true --style=scss --skip-git=true --skip-tests=true --standalone=false)",
       "Bash(npx ng:*)",
       "Bash(mkdir -p \"c:/Users/deepa/Desktop/backToGurgaon/front-end-interview/angular-playground/careers-api\")",
-      "Bash(npm init:*)"
+      "Bash(npm init:*)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\deepa\\\\Desktop\\\\backToGurgaon\\\\front-end-interview\\\\10thjune\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\deepa\\Desktop\\backToGurgaon\\front-end-interview"
     ]
   }
 }
